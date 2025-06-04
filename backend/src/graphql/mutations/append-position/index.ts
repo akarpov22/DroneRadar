@@ -2,14 +2,14 @@ import { MutationResolvers } from "../../../generated/schema";
 
 export const appendPosition: MutationResolvers['appendPosition'] = async (_, { input }, { prisma }) => {
 
-  const { droneSerial, latitude, longitude, altitude, heading, speed, timestamp } = input;
+  const { droneId, latitude, longitude, altitude, heading, speed, timestamp } = input;
 
   const drone = await prisma.drone.findUnique({
-    where: { serial: droneSerial },
+    where: { id: droneId },
   });
 
   if (!drone) {
-    throw new Error("Drone with this serial number not found.");
+    throw new Error("Drone with this id number not found.");
   }
 
   const session = await prisma.droneSession.findFirst({

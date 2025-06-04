@@ -3,7 +3,7 @@ type Mutation {
 }
 
 input AppendPositionInput {
-  droneSerial: String!
+  droneId: String!
   latitude: Float!
   longitude: Float!
   altitude: Float!

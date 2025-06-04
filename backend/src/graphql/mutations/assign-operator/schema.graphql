@@ -1,0 +1,9 @@
+type Mutation {
+    assignOperator(input: AssignOperatorInput!): Drone!
+}
+
+input AssignOperatorInput {
+  droneId: String!
+  operatorId: String!
+}
+

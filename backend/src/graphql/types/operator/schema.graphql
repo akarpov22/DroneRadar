@@ -1,0 +1,6 @@
+type Operator {
+  id: ID!
+  name: String!
+  licenseId: String
+  drones: [Drone!]!
+}

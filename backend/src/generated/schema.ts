@@ -89,15 +89,14 @@ export type Operator = {
 
 export type Position = {
   __typename?: 'Position';
-  altitude: Scalars['Float']['output'];
-  droneSessionId: Scalars['String']['output'];
-  heading: Scalars['Float']['output'];
+  altitude?: Maybe<Scalars['Float']['output']>;
+  heading?: Maybe<Scalars['Float']['output']>;
   id: Scalars['ID']['output'];
   latitude: Scalars['Float']['output'];
   longitude: Scalars['Float']['output'];
-  speed: Scalars['Float']['output'];
-  timestamp: Scalars['String']['output'];
-  verticalSpeed: Scalars['Float']['output'];
+  recordedAt: Scalars['DateTime']['output'];
+  session: DroneSession;
+  speed?: Maybe<Scalars['Float']['output']>;
 };
 
 export type Query = {
@@ -310,15 +309,14 @@ export type OperatorResolvers<ContextType = Context, ParentType extends Resolver
 };
 
 export type PositionResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Position'] = ResolversParentTypes['Position']> = {
-  altitude?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
-  droneSessionId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  heading?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  altitude?: Resolver<Maybe<ResolversTypes['Float']>, ParentType, ContextType>;
+  heading?: Resolver<Maybe<ResolversTypes['Float']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   latitude?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   longitude?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
-  speed?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
-  timestamp?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  verticalSpeed?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  recordedAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
+  session?: Resolver<ResolversTypes['DroneSession'], ParentType, ContextType>;
+  speed?: Resolver<Maybe<ResolversTypes['Float']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 

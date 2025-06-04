@@ -5,6 +5,6 @@ export const droneModelResolvers: DroneModelResolvers = {
     name: (parent) => parent.name,
     manufacturer: (parent) => parent.manufacturer,
     maxRange: (parent) => parent.maxRange,
-    createdAt: (parent) => parent.createdAt,
-    updatedAt: (parent) => parent.updatedAt
+    maxSpeed: (parent) => parent.maxSpeed ?? null,
+    drones: (parent) => parent.drones
 }

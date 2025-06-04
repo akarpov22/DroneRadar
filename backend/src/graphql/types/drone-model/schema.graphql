@@ -2,7 +2,7 @@ type DroneModel {
   id: ID!
   name: String!
   manufacturer: String!
+  maxSpeed: Float
   maxRange: Float!
-  createdAt: String!
-  updatedAt: String!
+  drones: [Drone!]!
 }

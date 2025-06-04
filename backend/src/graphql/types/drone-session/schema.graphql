@@ -1,0 +1,8 @@
+type DroneSession {
+  id: ID!
+  drone: Drone!
+  region: Region!
+  startedAt: DateTime!
+  endedAt: DateTime
+  positions: [Position!]!
+}

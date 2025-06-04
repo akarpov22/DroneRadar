@@ -1,0 +1,6 @@
+type Region {
+  id: ID!
+  name: String!
+  regionCode: String!
+  sessions: [DroneSession!]!
+}

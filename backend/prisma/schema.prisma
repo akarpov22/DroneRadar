@@ -11,28 +11,28 @@ model Drone {
   id         String         @id @default(uuid())
   name       String
   serial     String?        @unique
-  model      DroneModel     @relation(fields: [modelId], references: [id])
+  // model      DroneModel     @relation(fields: [modelId], references: [id])
   modelId    String
-  operator   Operator       @relation(fields: [operatorId], references: [id])
+  // operator   Operator       @relation(fields: [operatorId], references: [id])
   operatorId String
   createdAt  DateTime       @default(now())
-  sessions   DroneSession[]
+  // sessions   DroneSession[]
 }
 
 model DroneSession {
   id         String         @id @default(uuid())
-  drone      Drone          @relation(fields: [droneId], references: [id])
+  // drone      Drone          @relation(fields: [droneId], references: [id])
   droneId    String
-  region     Region         @relation(fields: [regionId], references: [id])
+  // region     Region         @relation(fields: [regionId], references: [id])
   regionId   String
   startedAt  DateTime       @default(now())
   endedAt    DateTime?
-  positions  Position[]
+  // positions  Position[]
 }
 
 model Position {
   id         String         @id @default(uuid())
-  session    DroneSession   @relation(fields: [sessionId], references: [id])
+  // session    DroneSession   @relation(fields: [sessionId], references: [id])
   sessionId  String
   latitude   Float
   longitude  Float
@@ -48,7 +48,7 @@ model Operator {
   id        String   @id @default(uuid())
   name      String
   licenseId String?
-  drones    Drone[]
+  // drones    Drone[]
 }
 
 model DroneModel {
@@ -57,12 +57,12 @@ model DroneModel {
   manufacturer String
   maxSpeed     Float?
   maxRange     Float
-  drones       Drone[]
+  // drones       Drone[]
 }
 
 model Region {
   id         String   @id @default(uuid())
   name       String
   regionCode String
-  sessions   DroneSession[]
+  // sessions   DroneSession[]
 }

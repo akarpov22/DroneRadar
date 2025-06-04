@@ -1,4 +1,5 @@
-import { GraphQLResolveInfo } from 'graphql';
+import { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
+import { Drone as PrismaDrone, DroneModel as PrismaDroneModel, DroneSession as PrismaDroneSession, Operator as PrismaOperator, Position as PrismaPosition, Region as PrismaRegion } from '../prisma/client';
 import { Context } from '../context';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
@@ -15,6 +16,7 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean; }
   Int: { input: number; output: number; }
   Float: { input: number; output: number; }
+  DateTime: { input: any; output: any; }
 };
 
 export type CreateDroneInput = {
@@ -32,22 +34,33 @@ export type CreateDroneModelInput = {
 
 export type Drone = {
   __typename?: 'Drone';
-  createdAt: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
   id: Scalars['ID']['output'];
-  modelId: Scalars['String']['output'];
+  model: DroneModel;
   name: Scalars['String']['output'];
-  operatorId: Scalars['String']['output'];
+  operator: Operator;
   serial?: Maybe<Scalars['String']['output']>;
+  sessions: Array<DroneSession>;
 };
 
 export type DroneModel = {
   __typename?: 'DroneModel';
-  createdAt: Scalars['String']['output'];
+  drones: Array<Drone>;
   id: Scalars['ID']['output'];
   manufacturer: Scalars['String']['output'];
   maxRange: Scalars['Float']['output'];
+  maxSpeed?: Maybe<Scalars['Float']['output']>;
   name: Scalars['String']['output'];
-  updatedAt: Scalars['String']['output'];
+};
+
+export type DroneSession = {
+  __typename?: 'DroneSession';
+  drone: Drone;
+  endedAt?: Maybe<Scalars['DateTime']['output']>;
+  id: Scalars['ID']['output'];
+  positions: Array<Position>;
+  region: Region;
+  startedAt: Scalars['DateTime']['output'];
 };
 
 export type Mutation = {
@@ -66,15 +79,79 @@ export type MutationCreateDroneModelArgs = {
   input: CreateDroneModelInput;
 };
 
+export type Operator = {
+  __typename?: 'Operator';
+  drones: Array<Drone>;
+  id: Scalars['ID']['output'];
+  licenseId?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+};
+
+export type Position = {
+  __typename?: 'Position';
+  altitude: Scalars['Float']['output'];
+  droneSessionId: Scalars['String']['output'];
+  heading: Scalars['Float']['output'];
+  id: Scalars['ID']['output'];
+  latitude: Scalars['Float']['output'];
+  longitude: Scalars['Float']['output'];
+  speed: Scalars['Float']['output'];
+  timestamp: Scalars['String']['output'];
+  verticalSpeed: Scalars['Float']['output'];
+};
+
 export type Query = {
   __typename?: 'Query';
   drone: Drone;
+  droneModel: DroneModel;
+  droneModels: Array<DroneModel>;
+  droneSession: DroneSession;
+  droneSessions: Array<DroneSession>;
   drones: Array<Drone>;
+  operator: Operator;
+  operators: Array<Operator>;
+  position: Position;
+  positions: Array<Position>;
+  region: Region;
+  regions: Array<Region>;
 };
 
 
 export type QueryDroneArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type QueryDroneModelArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryDroneSessionArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryOperatorArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryPositionArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryRegionArgs = {
+  id: Scalars['ID']['input'];
+};
+
+export type Region = {
+  __typename?: 'Region';
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  regionCode: Scalars['String']['output'];
+  sessions: Array<DroneSession>;
 };
 
 
@@ -151,12 +228,17 @@ export type ResolversTypes = {
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
   CreateDroneInput: CreateDroneInput;
   CreateDroneModelInput: CreateDroneModelInput;
-  Drone: ResolverTypeWrapper<Drone>;
-  DroneModel: ResolverTypeWrapper<DroneModel>;
+  DateTime: ResolverTypeWrapper<Scalars['DateTime']['output']>;
+  Drone: ResolverTypeWrapper<PrismaDrone>;
+  DroneModel: ResolverTypeWrapper<PrismaDroneModel>;
+  DroneSession: ResolverTypeWrapper<PrismaDroneSession>;
   Float: ResolverTypeWrapper<Scalars['Float']['output']>;
   ID: ResolverTypeWrapper<Scalars['ID']['output']>;
   Mutation: ResolverTypeWrapper<{}>;
+  Operator: ResolverTypeWrapper<PrismaOperator>;
+  Position: ResolverTypeWrapper<PrismaPosition>;
   Query: ResolverTypeWrapper<{}>;
+  Region: ResolverTypeWrapper<PrismaRegion>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
 };
 
@@ -165,32 +247,52 @@ export type ResolversParentTypes = {
   Boolean: Scalars['Boolean']['output'];
   CreateDroneInput: CreateDroneInput;
   CreateDroneModelInput: CreateDroneModelInput;
-  Drone: Drone;
-  DroneModel: DroneModel;
+  DateTime: Scalars['DateTime']['output'];
+  Drone: PrismaDrone;
+  DroneModel: PrismaDroneModel;
+  DroneSession: PrismaDroneSession;
   Float: Scalars['Float']['output'];
   ID: Scalars['ID']['output'];
   Mutation: {};
+  Operator: PrismaOperator;
+  Position: PrismaPosition;
   Query: {};
+  Region: PrismaRegion;
   String: Scalars['String']['output'];
 };
 
+export interface DateTimeScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['DateTime'], any> {
+  name: 'DateTime';
+}
+
 export type DroneResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Drone'] = ResolversParentTypes['Drone']> = {
-  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  modelId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  model?: Resolver<ResolversTypes['DroneModel'], ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  operatorId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  operator?: Resolver<ResolversTypes['Operator'], ParentType, ContextType>;
   serial?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  sessions?: Resolver<Array<ResolversTypes['DroneSession']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type DroneModelResolvers<ContextType = Context, ParentType extends ResolversParentTypes['DroneModel'] = ResolversParentTypes['DroneModel']> = {
-  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  drones?: Resolver<Array<ResolversTypes['Drone']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   manufacturer?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   maxRange?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  maxSpeed?: Resolver<Maybe<ResolversTypes['Float']>, ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type DroneSessionResolvers<ContextType = Context, ParentType extends ResolversParentTypes['DroneSession'] = ResolversParentTypes['DroneSession']> = {
+  drone?: Resolver<ResolversTypes['Drone'], ParentType, ContextType>;
+  endedAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  positions?: Resolver<Array<ResolversTypes['Position']>, ParentType, ContextType>;
+  region?: Resolver<ResolversTypes['Region'], ParentType, ContextType>;
+  startedAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -199,15 +301,59 @@ export type MutationResolvers<ContextType = Context, ParentType extends Resolver
   createDroneModel?: Resolver<ResolversTypes['DroneModel'], ParentType, ContextType, RequireFields<MutationCreateDroneModelArgs, 'input'>>;
 };
 
+export type OperatorResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Operator'] = ResolversParentTypes['Operator']> = {
+  drones?: Resolver<Array<ResolversTypes['Drone']>, ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  licenseId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type PositionResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Position'] = ResolversParentTypes['Position']> = {
+  altitude?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  droneSessionId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  heading?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  latitude?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  longitude?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  speed?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  timestamp?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  verticalSpeed?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
   drone?: Resolver<ResolversTypes['Drone'], ParentType, ContextType, RequireFields<QueryDroneArgs, 'id'>>;
+  droneModel?: Resolver<ResolversTypes['DroneModel'], ParentType, ContextType, RequireFields<QueryDroneModelArgs, 'id'>>;
+  droneModels?: Resolver<Array<ResolversTypes['DroneModel']>, ParentType, ContextType>;
+  droneSession?: Resolver<ResolversTypes['DroneSession'], ParentType, ContextType, RequireFields<QueryDroneSessionArgs, 'id'>>;
+  droneSessions?: Resolver<Array<ResolversTypes['DroneSession']>, ParentType, ContextType>;
   drones?: Resolver<Array<ResolversTypes['Drone']>, ParentType, ContextType>;
+  operator?: Resolver<ResolversTypes['Operator'], ParentType, ContextType, RequireFields<QueryOperatorArgs, 'id'>>;
+  operators?: Resolver<Array<ResolversTypes['Operator']>, ParentType, ContextType>;
+  position?: Resolver<ResolversTypes['Position'], ParentType, ContextType, RequireFields<QueryPositionArgs, 'id'>>;
+  positions?: Resolver<Array<ResolversTypes['Position']>, ParentType, ContextType>;
+  region?: Resolver<ResolversTypes['Region'], ParentType, ContextType, RequireFields<QueryRegionArgs, 'id'>>;
+  regions?: Resolver<Array<ResolversTypes['Region']>, ParentType, ContextType>;
+};
+
+export type RegionResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Region'] = ResolversParentTypes['Region']> = {
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  regionCode?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  sessions?: Resolver<Array<ResolversTypes['DroneSession']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type Resolvers<ContextType = Context> = {
+  DateTime?: GraphQLScalarType;
   Drone?: DroneResolvers<ContextType>;
   DroneModel?: DroneModelResolvers<ContextType>;
+  DroneSession?: DroneSessionResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
+  Operator?: OperatorResolvers<ContextType>;
+  Position?: PositionResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
+  Region?: RegionResolvers<ContextType>;
 };
 

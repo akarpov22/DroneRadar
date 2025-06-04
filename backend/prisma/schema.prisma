@@ -47,7 +47,7 @@ model Position {
 model Operator {
   id        String   @id @default(uuid())
   name      String
-  licenseId String?
+  licenseId String?  
   // drones    Drone[]
 }
 

@@ -1,0 +1,9 @@
+type Mutation {
+    createOperator(input: CreateOperatorInput!): Operator!
+}
+
+input CreateOperatorInput {
+  name: String!
+  licenseId: String
+  }
+

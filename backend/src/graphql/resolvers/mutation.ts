@@ -1,6 +1,6 @@
 import { MutationResolvers } from "../../generated/schema";
-import { createDrone } from '../mutations/create-drone'
+import { registerDroneIfNotExists } from '../mutations/register-drone-If-not-exists'
 
 export const mutationResolvers: MutationResolvers = {
-    createDrone
+    registerDroneIfNotExists
 }

@@ -63,6 +63,6 @@ model DroneModel {
 model Region {
   id         String   @id @default(uuid())
   name       String
-  regionCode String
+  regionCode String   @unique
   // sessions   DroneSession[]
 }

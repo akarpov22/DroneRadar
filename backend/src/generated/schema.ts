@@ -19,13 +19,6 @@ export type Scalars = {
   DateTime: { input: any; output: any; }
 };
 
-export type CreateDroneInput = {
-  modelId: Scalars['String']['input'];
-  name: Scalars['String']['input'];
-  operatorId: Scalars['String']['input'];
-  serial?: InputMaybe<Scalars['String']['input']>;
-};
-
 export type CreateDroneModelInput = {
   manufacturer: Scalars['String']['input'];
   maxRange: Scalars['Float']['input'];
@@ -65,18 +58,18 @@ export type DroneSession = {
 
 export type Mutation = {
   __typename?: 'Mutation';
-  createDrone: Drone;
   createDroneModel: DroneModel;
-};
-
-
-export type MutationCreateDroneArgs = {
-  input: CreateDroneInput;
+  registerDroneIfNotExists: Drone;
 };
 
 
 export type MutationCreateDroneModelArgs = {
   input: CreateDroneModelInput;
+};
+
+
+export type MutationRegisterDroneIfNotExistsArgs = {
+  input: RegisterDroneIfNotExistsInput;
 };
 
 export type Operator = {
@@ -153,6 +146,14 @@ export type Region = {
   sessions: Array<DroneSession>;
 };
 
+export type RegisterDroneIfNotExistsInput = {
+  modelId?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+  operatorId?: InputMaybe<Scalars['String']['input']>;
+  regionCode: Scalars['String']['input'];
+  serial: Scalars['String']['input'];
+};
+
 
 
 export type ResolverTypeWrapper<T> = Promise<T> | T;
@@ -225,7 +226,6 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
-  CreateDroneInput: CreateDroneInput;
   CreateDroneModelInput: CreateDroneModelInput;
   DateTime: ResolverTypeWrapper<Scalars['DateTime']['output']>;
   Drone: ResolverTypeWrapper<PrismaDrone>;
@@ -238,13 +238,13 @@ export type ResolversTypes = {
   Position: ResolverTypeWrapper<PrismaPosition>;
   Query: ResolverTypeWrapper<{}>;
   Region: ResolverTypeWrapper<PrismaRegion>;
+  RegisterDroneIfNotExistsInput: RegisterDroneIfNotExistsInput;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
 };
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
   Boolean: Scalars['Boolean']['output'];
-  CreateDroneInput: CreateDroneInput;
   CreateDroneModelInput: CreateDroneModelInput;
   DateTime: Scalars['DateTime']['output'];
   Drone: PrismaDrone;
@@ -257,6 +257,7 @@ export type ResolversParentTypes = {
   Position: PrismaPosition;
   Query: {};
   Region: PrismaRegion;
+  RegisterDroneIfNotExistsInput: RegisterDroneIfNotExistsInput;
   String: Scalars['String']['output'];
 };
 
@@ -296,8 +297,8 @@ export type DroneSessionResolvers<ContextType = Context, ParentType extends Reso
 };
 
 export type MutationResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
-  createDrone?: Resolver<ResolversTypes['Drone'], ParentType, ContextType, RequireFields<MutationCreateDroneArgs, 'input'>>;
   createDroneModel?: Resolver<ResolversTypes['DroneModel'], ParentType, ContextType, RequireFields<MutationCreateDroneModelArgs, 'input'>>;
+  registerDroneIfNotExists?: Resolver<ResolversTypes['Drone'], ParentType, ContextType, RequireFields<MutationRegisterDroneIfNotExistsArgs, 'input'>>;
 };
 
 export type OperatorResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Operator'] = ResolversParentTypes['Operator']> = {

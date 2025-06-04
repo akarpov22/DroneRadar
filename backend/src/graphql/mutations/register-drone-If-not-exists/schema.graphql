@@ -1,0 +1,12 @@
+type Mutation {
+    registerDroneIfNotExists(input: RegisterDroneIfNotExistsInput!): Drone!
+}
+
+input RegisterDroneIfNotExistsInput {
+    serial: String!
+    name: String!
+    regionCode: String!
+    modelId: String
+    operatorId: String
+}
+

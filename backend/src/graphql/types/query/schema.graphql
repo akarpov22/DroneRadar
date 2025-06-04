@@ -1,4 +1,14 @@
 type Query {
   drones: [Drone!]!
   drone(id: ID!): Drone!
+  droneModels: [DroneModel!]!
+  droneModel(id: ID!): DroneModel!
+  droneSessions: [DroneSession!]!
+  droneSession(id: ID!): DroneSession!
+  operators: [Operator!]!
+  operator(id: ID!): Operator!
+  positions: [Position!]!
+  position(id: ID!): Position!
+  regions: [Region!]!
+  region(id: ID!): Region!
 }

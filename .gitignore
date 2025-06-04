@@ -1,0 +1,16 @@
+# Node modules
+**/node_modules/
+
+# dotenv environment files
+.env
+
+# Compiled source
+**/dist/
+**/build/
+**/out/
+
+# TypeScript
+**/*.tsbuildinfo
+
+# VS Code
+.vscode/

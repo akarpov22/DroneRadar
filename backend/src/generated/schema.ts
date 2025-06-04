@@ -24,6 +24,12 @@ export type CreateDroneInput = {
   serial?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type CreateDroneModelInput = {
+  manufacturer: Scalars['String']['input'];
+  maxRange: Scalars['Float']['input'];
+  name: Scalars['String']['input'];
+};
+
 export type Drone = {
   __typename?: 'Drone';
   createdAt: Scalars['String']['output'];
@@ -34,14 +40,30 @@ export type Drone = {
   serial?: Maybe<Scalars['String']['output']>;
 };
 
+export type DroneModel = {
+  __typename?: 'DroneModel';
+  createdAt: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  manufacturer: Scalars['String']['output'];
+  maxRange: Scalars['Float']['output'];
+  name: Scalars['String']['output'];
+  updatedAt: Scalars['String']['output'];
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   createDrone: Drone;
+  createDroneModel: DroneModel;
 };
 
 
 export type MutationCreateDroneArgs = {
   input: CreateDroneInput;
+};
+
+
+export type MutationCreateDroneModelArgs = {
+  input: CreateDroneModelInput;
 };
 
 export type Query = {
@@ -128,7 +150,10 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 export type ResolversTypes = {
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
   CreateDroneInput: CreateDroneInput;
+  CreateDroneModelInput: CreateDroneModelInput;
   Drone: ResolverTypeWrapper<Drone>;
+  DroneModel: ResolverTypeWrapper<DroneModel>;
+  Float: ResolverTypeWrapper<Scalars['Float']['output']>;
   ID: ResolverTypeWrapper<Scalars['ID']['output']>;
   Mutation: ResolverTypeWrapper<{}>;
   Query: ResolverTypeWrapper<{}>;
@@ -139,7 +164,10 @@ export type ResolversTypes = {
 export type ResolversParentTypes = {
   Boolean: Scalars['Boolean']['output'];
   CreateDroneInput: CreateDroneInput;
+  CreateDroneModelInput: CreateDroneModelInput;
   Drone: Drone;
+  DroneModel: DroneModel;
+  Float: Scalars['Float']['output'];
   ID: Scalars['ID']['output'];
   Mutation: {};
   Query: {};
@@ -156,8 +184,19 @@ export type DroneResolvers<ContextType = Context, ParentType extends ResolversPa
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type DroneModelResolvers<ContextType = Context, ParentType extends ResolversParentTypes['DroneModel'] = ResolversParentTypes['DroneModel']> = {
+  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  manufacturer?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  maxRange?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type MutationResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
   createDrone?: Resolver<ResolversTypes['Drone'], ParentType, ContextType, RequireFields<MutationCreateDroneArgs, 'input'>>;
+  createDroneModel?: Resolver<ResolversTypes['DroneModel'], ParentType, ContextType, RequireFields<MutationCreateDroneModelArgs, 'input'>>;
 };
 
 export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
@@ -167,6 +206,7 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
 
 export type Resolvers<ContextType = Context> = {
   Drone?: DroneResolvers<ContextType>;
+  DroneModel?: DroneModelResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
 };

@@ -1,0 +1,8 @@
+type DroneModel {
+  id: ID!
+  name: String!
+  manufacturer: String!
+  maxRange: Float!
+  createdAt: String!
+  updatedAt: String!
+}

@@ -1,0 +1,10 @@
+type Mutation {
+    createDroneModel(input: CreateDroneModelInput!): DroneModel!
+}
+
+input CreateDroneModelInput {
+  name: String!
+  manufacturer: String!
+  maxRange: Float!
+}
+

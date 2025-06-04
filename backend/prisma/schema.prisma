@@ -54,9 +54,9 @@ model Operator {
 model DroneModel {
   id           String   @id @default(uuid())
   name         String
-  manufacturer String?
+  manufacturer String
   maxSpeed     Float?
-  maxRange     Float?  
+  maxRange     Float
   drones       Drone[]
 }
 

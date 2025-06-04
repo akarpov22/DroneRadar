@@ -29,6 +29,11 @@ export type AppendPositionInput = {
   timestamp: Scalars['DateTime']['input'];
 };
 
+export type AssignModelInput = {
+  droneId: Scalars['String']['input'];
+  modelId: Scalars['String']['input'];
+};
+
 export type AssignOperatorInput = {
   droneId: Scalars['String']['input'];
   operatorId: Scalars['String']['input'];
@@ -74,6 +79,7 @@ export type DroneSession = {
 export type Mutation = {
   __typename?: 'Mutation';
   appendPosition: Position;
+  assignModel: Drone;
   assignOperator: Drone;
   createDroneModel: DroneModel;
   registerDroneIfNotExists: Drone;
@@ -82,6 +88,11 @@ export type Mutation = {
 
 export type MutationAppendPositionArgs = {
   input: AppendPositionInput;
+};
+
+
+export type MutationAssignModelArgs = {
+  input: AssignModelInput;
 };
 
 
@@ -253,6 +264,7 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
   AppendPositionInput: AppendPositionInput;
+  AssignModelInput: AssignModelInput;
   AssignOperatorInput: AssignOperatorInput;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
   CreateDroneModelInput: CreateDroneModelInput;
@@ -274,6 +286,7 @@ export type ResolversTypes = {
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
   AppendPositionInput: AppendPositionInput;
+  AssignModelInput: AssignModelInput;
   AssignOperatorInput: AssignOperatorInput;
   Boolean: Scalars['Boolean']['output'];
   CreateDroneModelInput: CreateDroneModelInput;
@@ -329,6 +342,7 @@ export type DroneSessionResolvers<ContextType = Context, ParentType extends Reso
 
 export type MutationResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
   appendPosition?: Resolver<ResolversTypes['Position'], ParentType, ContextType, RequireFields<MutationAppendPositionArgs, 'input'>>;
+  assignModel?: Resolver<ResolversTypes['Drone'], ParentType, ContextType, RequireFields<MutationAssignModelArgs, 'input'>>;
   assignOperator?: Resolver<ResolversTypes['Drone'], ParentType, ContextType, RequireFields<MutationAssignOperatorArgs, 'input'>>;
   createDroneModel?: Resolver<ResolversTypes['DroneModel'], ParentType, ContextType, RequireFields<MutationCreateDroneModelArgs, 'input'>>;
   registerDroneIfNotExists?: Resolver<ResolversTypes['Drone'], ParentType, ContextType, RequireFields<MutationRegisterDroneIfNotExistsArgs, 'input'>>;

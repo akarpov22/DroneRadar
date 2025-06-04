@@ -1,0 +1,9 @@
+type Mutation {
+    assignModel(input: AssignModelInput!): Drone!
+}
+
+input AssignModelInput {
+  droneId: String!
+  modelId: String!
+}
+

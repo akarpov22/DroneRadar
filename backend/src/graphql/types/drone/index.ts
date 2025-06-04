@@ -5,7 +5,7 @@ export const droneResolvers: DroneResolvers = {
     name: (parent) => parent.name,
     serial: (parent) => parent.serial ?? null,
     model: (parent) => parent.model ?? null,
-    operator: (parent) => parent.operator,
+    operator: (parent) => parent.operator ?? null,
     sessions: (parent) =>  parent.sessions,
     createdAt: (parent) => parent.createdAt,
 }

@@ -38,7 +38,7 @@ export type Drone = {
   id: Scalars['ID']['output'];
   model?: Maybe<DroneModel>;
   name: Scalars['String']['output'];
-  operator: Operator;
+  operator?: Maybe<Operator>;
   serial?: Maybe<Scalars['String']['output']>;
   sessions: Array<DroneSession>;
 };
@@ -269,7 +269,7 @@ export type DroneResolvers<ContextType = Context, ParentType extends ResolversPa
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   model?: Resolver<Maybe<ResolversTypes['DroneModel']>, ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  operator?: Resolver<ResolversTypes['Operator'], ParentType, ContextType>;
+  operator?: Resolver<Maybe<ResolversTypes['Operator']>, ParentType, ContextType>;
   serial?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   sessions?: Resolver<Array<ResolversTypes['DroneSession']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;

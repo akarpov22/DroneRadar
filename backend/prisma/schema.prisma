@@ -10,11 +10,11 @@ datasource db {
 model Drone {
   id         String         @id @default(uuid())
   name       String
-  serial     String?        @unique
+  serial     String        @unique
   // model      DroneModel     @relation(fields: [modelId], references: [id])
   modelId    String?
   // operator   Operator       @relation(fields: [operatorId], references: [id])
-  operatorId String
+  operatorId String?
   createdAt  DateTime       @default(now())
   // sessions   DroneSession[]
 }

@@ -1,0 +1,4 @@
+type Query {
+  drones: [Drone!]!
+  drone(id: ID!): Drone!
+}

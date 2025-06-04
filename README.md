@@ -20,6 +20,12 @@
 
 ## 🚀 Запуск локально
 
+### DataBase
+
+```bash
+docker-compose up -d
+```
+
 ### Backend
 
 ```bash

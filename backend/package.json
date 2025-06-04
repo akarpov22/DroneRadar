@@ -4,16 +4,27 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "npx ts-node src/server.ts",
+    "build": "tsc",
+    "codegen": "graphql-codegen"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@graphql-codegen/typescript": "^4.1.6",
+    "@graphql-codegen/typescript-resolvers": "^4.5.1",
     "prisma": "^6.9.0",
+    "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "@prisma/client": "^6.9.0"
+    "@graphql-codegen/cli": "^5.0.6",
+    "@graphql-tools/load-files": "^7.0.1",
+    "@prisma/client": "^6.9.0",
+    "@types/node": "^22.15.29",
+    "apollo-server": "^3.13.0",
+    "graphql-subscriptions": "^3.0.0"
   }
 }

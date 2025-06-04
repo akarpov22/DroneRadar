@@ -1,0 +1,8 @@
+type Drone {
+  id: ID!
+  name: String!
+  serial: String
+  modelId: String!
+  operatorId: String!
+  createdAt: String!
+}

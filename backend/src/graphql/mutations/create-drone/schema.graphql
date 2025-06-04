@@ -1,0 +1,11 @@
+type Mutation {
+    createDrone(input: CreateDroneInput!): Drone!
+}
+
+input CreateDroneInput {
+    name: String!
+    serial: String
+    modelId: String!
+    operatorId: String!
+}
+

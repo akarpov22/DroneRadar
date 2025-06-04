@@ -45,6 +45,11 @@ export type CreateDroneModelInput = {
   name: Scalars['String']['input'];
 };
 
+export type CreateSessionInput = {
+  droneId: Scalars['ID']['input'];
+  regionId: Scalars['ID']['input'];
+};
+
 export type Drone = {
   __typename?: 'Drone';
   createdAt: Scalars['DateTime']['output'];
@@ -86,6 +91,7 @@ export type Mutation = {
   assignModel: Drone;
   assignOperator: Drone;
   createDroneModel: DroneModel;
+  createSession: DroneSession;
   endSession: DroneSession;
   registerDroneIfNotExists: Drone;
 };
@@ -108,6 +114,11 @@ export type MutationAssignOperatorArgs = {
 
 export type MutationCreateDroneModelArgs = {
   input: CreateDroneModelInput;
+};
+
+
+export type MutationCreateSessionArgs = {
+  input: CreateSessionInput;
 };
 
 
@@ -278,6 +289,7 @@ export type ResolversTypes = {
   AssignOperatorInput: AssignOperatorInput;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
   CreateDroneModelInput: CreateDroneModelInput;
+  CreateSessionInput: CreateSessionInput;
   DateTime: ResolverTypeWrapper<Scalars['DateTime']['output']>;
   Drone: ResolverTypeWrapper<PrismaDrone>;
   DroneModel: ResolverTypeWrapper<PrismaDroneModel>;
@@ -301,6 +313,7 @@ export type ResolversParentTypes = {
   AssignOperatorInput: AssignOperatorInput;
   Boolean: Scalars['Boolean']['output'];
   CreateDroneModelInput: CreateDroneModelInput;
+  CreateSessionInput: CreateSessionInput;
   DateTime: Scalars['DateTime']['output'];
   Drone: PrismaDrone;
   DroneModel: PrismaDroneModel;
@@ -357,6 +370,7 @@ export type MutationResolvers<ContextType = Context, ParentType extends Resolver
   assignModel?: Resolver<ResolversTypes['Drone'], ParentType, ContextType, RequireFields<MutationAssignModelArgs, 'input'>>;
   assignOperator?: Resolver<ResolversTypes['Drone'], ParentType, ContextType, RequireFields<MutationAssignOperatorArgs, 'input'>>;
   createDroneModel?: Resolver<ResolversTypes['DroneModel'], ParentType, ContextType, RequireFields<MutationCreateDroneModelArgs, 'input'>>;
+  createSession?: Resolver<ResolversTypes['DroneSession'], ParentType, ContextType, RequireFields<MutationCreateSessionArgs, 'input'>>;
   endSession?: Resolver<ResolversTypes['DroneSession'], ParentType, ContextType, RequireFields<MutationEndSessionArgs, 'input'>>;
   registerDroneIfNotExists?: Resolver<ResolversTypes['Drone'], ParentType, ContextType, RequireFields<MutationRegisterDroneIfNotExistsArgs, 'input'>>;
 };

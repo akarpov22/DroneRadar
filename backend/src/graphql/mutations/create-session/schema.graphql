@@ -1,0 +1,9 @@
+type Mutation {
+    createSession(input: CreateSessionInput!): DroneSession!
+}
+
+input CreateSessionInput {
+  droneId: ID!
+  regionId: ID!
+  }
+

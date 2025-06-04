@@ -1,0 +1,8 @@
+type Mutation {
+    endSession(input: EndSessionInput!): DroneSession!
+}
+
+input EndSessionInput {
+  droneId: String!
+}
+

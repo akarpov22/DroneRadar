@@ -3,10 +3,12 @@ import { registerDroneIfNotExists } from '../mutations/register-drone-If-not-exi
 import { appendPosition } from '../mutations/append-position'
 import { assignOperator } from "../mutations/assign-operator";
 import { assignModel } from "../mutations/assign-model";
+import { endSession } from "../mutations/end-seesion";
 
 export const mutationResolvers: MutationResolvers = {
     registerDroneIfNotExists,
     appendPosition,
     assignOperator,
-    assignModel
+    assignModel,
+    endSession
 }

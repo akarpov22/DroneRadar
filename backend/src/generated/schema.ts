@@ -76,12 +76,17 @@ export type DroneSession = {
   startedAt: Scalars['DateTime']['output'];
 };
 
+export type EndSessionInput = {
+  droneId: Scalars['String']['input'];
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   appendPosition: Position;
   assignModel: Drone;
   assignOperator: Drone;
   createDroneModel: DroneModel;
+  endSession: DroneSession;
   registerDroneIfNotExists: Drone;
 };
 
@@ -103,6 +108,11 @@ export type MutationAssignOperatorArgs = {
 
 export type MutationCreateDroneModelArgs = {
   input: CreateDroneModelInput;
+};
+
+
+export type MutationEndSessionArgs = {
+  input: EndSessionInput;
 };
 
 
@@ -272,6 +282,7 @@ export type ResolversTypes = {
   Drone: ResolverTypeWrapper<PrismaDrone>;
   DroneModel: ResolverTypeWrapper<PrismaDroneModel>;
   DroneSession: ResolverTypeWrapper<PrismaDroneSession>;
+  EndSessionInput: EndSessionInput;
   Float: ResolverTypeWrapper<Scalars['Float']['output']>;
   ID: ResolverTypeWrapper<Scalars['ID']['output']>;
   Mutation: ResolverTypeWrapper<{}>;
@@ -294,6 +305,7 @@ export type ResolversParentTypes = {
   Drone: PrismaDrone;
   DroneModel: PrismaDroneModel;
   DroneSession: PrismaDroneSession;
+  EndSessionInput: EndSessionInput;
   Float: Scalars['Float']['output'];
   ID: Scalars['ID']['output'];
   Mutation: {};
@@ -345,6 +357,7 @@ export type MutationResolvers<ContextType = Context, ParentType extends Resolver
   assignModel?: Resolver<ResolversTypes['Drone'], ParentType, ContextType, RequireFields<MutationAssignModelArgs, 'input'>>;
   assignOperator?: Resolver<ResolversTypes['Drone'], ParentType, ContextType, RequireFields<MutationAssignOperatorArgs, 'input'>>;
   createDroneModel?: Resolver<ResolversTypes['DroneModel'], ParentType, ContextType, RequireFields<MutationCreateDroneModelArgs, 'input'>>;
+  endSession?: Resolver<ResolversTypes['DroneSession'], ParentType, ContextType, RequireFields<MutationEndSessionArgs, 'input'>>;
   registerDroneIfNotExists?: Resolver<ResolversTypes['Drone'], ParentType, ContextType, RequireFields<MutationRegisterDroneIfNotExistsArgs, 'input'>>;
 };
 

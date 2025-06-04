@@ -36,7 +36,7 @@ export type Drone = {
   __typename?: 'Drone';
   createdAt: Scalars['DateTime']['output'];
   id: Scalars['ID']['output'];
-  model: DroneModel;
+  model?: Maybe<DroneModel>;
   name: Scalars['String']['output'];
   operator: Operator;
   serial?: Maybe<Scalars['String']['output']>;
@@ -267,7 +267,7 @@ export interface DateTimeScalarConfig extends GraphQLScalarTypeConfig<ResolversT
 export type DroneResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Drone'] = ResolversParentTypes['Drone']> = {
   createdAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  model?: Resolver<ResolversTypes['DroneModel'], ParentType, ContextType>;
+  model?: Resolver<Maybe<ResolversTypes['DroneModel']>, ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   operator?: Resolver<ResolversTypes['Operator'], ParentType, ContextType>;
   serial?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;

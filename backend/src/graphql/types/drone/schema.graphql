@@ -2,7 +2,7 @@ type Drone {
   id: ID!
   name: String!
   serial: String
-  model: DroneModel!
+  model: DroneModel
   operator: Operator!
   createdAt: DateTime!
   sessions: [DroneSession!]!

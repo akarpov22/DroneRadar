@@ -12,7 +12,7 @@ model Drone {
   name       String
   serial     String?        @unique
   // model      DroneModel     @relation(fields: [modelId], references: [id])
-  modelId    String
+  modelId    String?
   // operator   Operator       @relation(fields: [operatorId], references: [id])
   operatorId String
   createdAt  DateTime       @default(now())

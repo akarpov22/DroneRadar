@@ -3,11 +3,12 @@ import { OlMap } from "../ol-map"
 import { useDroneSelection } from "../drone-selection-provider"
 import { useTranslation } from "react-i18next"
 import { DroneMenu } from "../drone-menu"
+import { t } from "i18next"
 
 
 export const DroneRadar = () => {
-    const { selectedDrone } = useDroneSelection();
-    const { i18n } = useTranslation()
+    const { selectedDrone, isDisplayOwned, setIsDisplayOwned} = useDroneSelection();
+    const { i18n, t } = useTranslation()
     const isEnglish = i18n.language === 'en'
 
     return (
@@ -20,6 +21,10 @@ export const DroneRadar = () => {
                     </Button>
             </Flex>
             {selectedDrone && <DroneMenu drone={selectedDrone}/>}
+
+            <Button size={'xs'} mt={'auto'} mb={3} onClick={() => setIsDisplayOwned(!isDisplayOwned)}>
+                {isDisplayOwned?t('show-all'):t('show-only-owned')}
+            </Button>
         </VStack>
         <Box w={'80%'}>
             <OlMap/>

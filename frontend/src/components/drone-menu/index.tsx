@@ -35,9 +35,12 @@ export const DroneMenu = ({drone}: DroneMenuProps) => {
                 <Text w={'100%'} textAlign={'left'} fontWeight={'semibold'} mt={5}>{t('yours-drone')}</Text>
                 <Input type="text" placeholder={`${t('enter-serial-number')}...`} variant={'subtle'} onInput={(e: React.ChangeEvent<HTMLInputElement>) => setSerialNumber(e.target.value)}/>
                 <Button ml={'auto'} size={'xs'} 
-                onClick={(e) => {
-                    if (serialNumber === drone.serial)
+                onClick={() => {
+                    if (serialNumber === drone.serial){
+                        const myDrones: string[] = JSON.parse(localStorage.getItem('myDrones') ?? '[]');
+                        localStorage.setItem('myDrones', JSON.stringify(myDrones.concat(drone.serial)));
                         setIsAccessGranted(true)
+                    }
                 }}
             >
                 {t('manage')}

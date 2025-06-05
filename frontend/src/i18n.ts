@@ -23,7 +23,9 @@ i18n
           "manufacturer": "Manufacturer",
           "max-range": "Max range",
           "max-speed": "Max speed",
-          "save": "Save"          
+          "save": "Save",
+          "show-only-owned": "Show only owned",
+          "show-all": "Show all"         
         },
       },
       uk: {
@@ -37,7 +39,9 @@ i18n
           "manufacturer": "Виробник",
           "max-range": "Максимальна дальність польоту",
           "max-speed": "Максимальна швидкість",
-          "save": "Зберегти"         
+          "save": "Зберегти" ,
+          "show-only-owned": "Відобразити тільки свої дрони",
+          "show-all": "Відобразити всі"          
         },
       },
     },

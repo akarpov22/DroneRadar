@@ -20,7 +20,7 @@ export const OlMap: React.FC = () => {
   const { drones } = useDrones()
   const dronesRef = useRef(drones);
 
-  const {selectedDrone, setSelectedDrone} = useDroneSelection()
+  const {selectedDrone, setSelectedDrone, isDisplayOwned} = useDroneSelection()
     const [droneSource] = useState<VectorSource<Feature<Point>>>(new VectorSource({
     features: [],
   }))
@@ -39,6 +39,7 @@ export const OlMap: React.FC = () => {
     });
 
     droneFeature.set('droneId', drone.id)
+    droneFeature.set('droneSerial', drone.serial)
     droneFeature.set('isExpired', false)
 
 
@@ -72,6 +73,7 @@ export const OlMap: React.FC = () => {
     });
     
     lineFeature.set('droneId', drone.id)
+    lineFeature.set('droneSerial', drone.serial)
 
     lineFeature.setStyle(new Style({
       stroke: new Stroke({
@@ -130,11 +132,12 @@ export const OlMap: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    const ownedDrones: string[] = JSON.parse(localStorage.getItem('myDrones') ?? '[]')
     droneSource.clear()
-    droneSource.addFeatures(droneFeatures.filter(drone => !drone.get('isExpired')))
+    droneSource.addFeatures(droneFeatures.filter(drone => !drone.get('isExpired')  && (!isDisplayOwned || ownedDrones.includes(drone.get('droneSerial')))))
   
     dronePathSource.clear()
-    dronePathSource.addFeatures(dronePathFeatures.filter(path => path.get('droneId') === selectedDrone?.id))  
+    dronePathSource.addFeatures(dronePathFeatures.filter(path => path.get('droneId') === selectedDrone?.id  && (!isDisplayOwned || ownedDrones.includes(path.get('droneSerial')))))  
   }, [droneFeatures, dronePathFeatures])
 
   return (

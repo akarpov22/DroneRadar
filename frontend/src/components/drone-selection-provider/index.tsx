@@ -1,13 +1,21 @@
 import { createContext, Dispatch, SetStateAction, useContext, useState } from "react";
 import { Drone } from "../../utils/types";
 
-const DroneSelectionContext = createContext<{selectedDrone: Drone | undefined, setSelectedDrone: Dispatch<SetStateAction<undefined | Drone>>} | null>(null);
+type DroneSelectionContextProps = {
+  selectedDrone: Drone | undefined,
+  setSelectedDrone: Dispatch<SetStateAction<undefined | Drone>>,
+  isDisplayOwned: boolean,
+  setIsDisplayOwned: Dispatch<SetStateAction<boolean>>
+}
+
+const DroneSelectionContext = createContext<DroneSelectionContextProps | null>(null);
 
 export const DroneSelectionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [selectedDrone, setSelectedDrone] = useState<Drone>();
+  const [isDisplayOwned, setIsDisplayOwned] = useState<boolean>(false);
 
   return (
-    <DroneSelectionContext.Provider value={ {selectedDrone, setSelectedDrone} } >
+    <DroneSelectionContext.Provider value={ {selectedDrone, setSelectedDrone, isDisplayOwned, setIsDisplayOwned} } >
       {children}
     </DroneSelectionContext.Provider>
   );

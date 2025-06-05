@@ -105,13 +105,15 @@ export const OlMap: React.FC = () => {
     });
 
     map.on('click', (evt) => {
+      let isDroneClicked = false;
       map.forEachFeatureAtPixel(evt.pixel, (feature) => {
         const id = feature.get('droneId');
         const currentDrone = dronesRef.current.find(drone => drone.id === id)
-        if (id) {
-          setSelectedDrone(prev => (prev?.id === id ? undefined : currentDrone));
-        }
+        isDroneClicked = true;
+        setSelectedDrone(currentDrone);
       });
+      if (!isDroneClicked)
+        setSelectedDrone(undefined)
     });
 
     return () => map.setTarget(undefined); 

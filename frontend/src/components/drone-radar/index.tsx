@@ -1,6 +1,5 @@
 import { Box, Heading, HStack, VStack } from "@chakra-ui/react"
 import { OlMap } from "../ol-map"
-import {  useDrones } from "../drone-data-provider"
 
 
 export const DroneRadar = () => {

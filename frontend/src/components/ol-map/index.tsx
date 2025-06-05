@@ -14,12 +14,13 @@ import VectorLayer from 'ol/layer/Vector';
 import { fromLonLat } from 'ol/proj';
 import { getLast } from '../../utils/array';
 import Stroke from 'ol/style/Stroke';
+import { useDroneSelection } from '../drone-selection-provider';
 
 export const OlMap: React.FC = () => {
   const drones = useDrones()
 
-  const [selectedDroneId, setSelectedDroneId] = useState<string>();
-  const [droneSource] = useState<VectorSource<Feature<Point>>>(new VectorSource({
+  const {selectedDrone, setSelectedDrone} = useDroneSelection()
+    const [droneSource] = useState<VectorSource<Feature<Point>>>(new VectorSource({
     features: [],
   }))
   const [dronePathSource] = useState<  VectorSource<Feature<LineString>>  >(new VectorSource({
@@ -44,14 +45,13 @@ export const OlMap: React.FC = () => {
         scale: 0.02,
         src: '/assets/drone.png',
         rotation: currentPosition?.heading ?? 0,
-        color: selectedDroneId === drone.id ? '#ffff00' : undefined, 
+        color: selectedDrone?.id === drone.id ? '#ffff00' : undefined, 
       }),
     }));
 
     return droneFeature
   })
 
-  useEffect(() => {console.log(selectedDroneId)}, [selectedDroneId])
   const dronePathFeatures = drones.map(drone => {
     const currentSession = getLast(drone.sessions)
 
@@ -100,11 +100,12 @@ export const OlMap: React.FC = () => {
     });
 
     map.on('click', (evt) => {
-      setSelectedDroneId(undefined)
+      setSelectedDrone(undefined)
       map.forEachFeatureAtPixel(evt.pixel, (feature) => {
         const id = feature.get('droneId');
+        const currentDrone = drones.find(drone => drone.id === id)
         if (id) {
-          setSelectedDroneId(prev => (prev === id ? null : id));
+          setSelectedDrone(prev => (prev?.id === id ? undefined : currentDrone));
         }
       });
     });

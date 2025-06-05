@@ -44,3 +44,10 @@ export const DRONE_UPDATED = gql`
     }
   }
 `;
+
+export const ASSIGN_MODEL = gql`
+mutation AssignModel($input: AssignModelInput!) {
+  assignModel(input: $input) {
+    id
+  }
+}`;

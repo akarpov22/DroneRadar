@@ -5,10 +5,13 @@ import { useState } from "react"
 import { useDrones } from "../drone-data-provider"
 import { Select } from "chakra-react-select"
 import { ModelDescription } from "./model-description"
+import { useMutation } from "@apollo/client"
+import { ASSIGN_MODEL } from "../../utils/graphql-queries"
 
 type DroneMenuProps = {drone: Drone | undefined}
 
 export const DroneMenu = ({drone}: DroneMenuProps) => {
+    const [ assignModelMutation ] = useMutation(ASSIGN_MODEL, {refetchQueries: 'active'})
     const { models } = useDrones();
     const { t } = useTranslation();
     const [isAccessGranted, setIsAccessGranted] = useState(false);
@@ -54,6 +57,18 @@ export const DroneMenu = ({drone}: DroneMenuProps) => {
             defaultValue={defaultOption}
             options={options}
             />
+            <Button ml={'auto'} size={'xs'} 
+                onClick={(e) => {
+                    assignModelMutation({variables:{ input: {
+                        droneId: drone.id,
+                        modelId: selectedModel
+                        }
+            }})
+                }}
+            >
+                {t('save')}
+            </Button>
+            
         </VStack>
     )
 }

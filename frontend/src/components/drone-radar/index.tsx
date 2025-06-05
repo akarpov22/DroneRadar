@@ -6,7 +6,7 @@ import { DroneMenu } from "../drone-menu"
 
 
 export const DroneRadar = () => {
-    const { selectedDrone, setSelectedDrone } = useDroneSelection();
+    const { selectedDrone } = useDroneSelection();
     const { i18n } = useTranslation()
     const isEnglish = i18n.language === 'en'
 
@@ -19,7 +19,7 @@ export const DroneRadar = () => {
                         {isEnglish?"Українська": "English"}
                     </Button>
             </Flex>
-            <DroneMenu drone={selectedDrone}/>
+            {selectedDrone && <DroneMenu drone={selectedDrone}/>}
         </VStack>
         <Box w={'80%'}>
             <OlMap/>

@@ -49,8 +49,8 @@ async function main() {
   while (true) {
     const input = {
       droneId,
-      latitude: 50.45 + Math.random() * 0.01,
-      longitude: 30.52 + Math.random() * 0.01,
+      latitude: 30.52 + Math.random() * 0.03,
+      longitude: 50.45 + Math.random() * 0.03,
       altitude: 100 + Math.random() * 20,
       speed: 10 + Math.random() * 5,
       heading: Math.random() * 360,

@@ -22,8 +22,8 @@ i18n
           "name": "Name",
           "manufacturer": "Manufacturer",
           "max-range": "Max range",
-          "max-speed": "Max speed"
-          
+          "max-speed": "Max speed",
+          "save": "Save"          
         },
       },
       uk: {
@@ -36,7 +36,8 @@ i18n
           "name": "Ім'я",
           "manufacturer": "Виробник",
           "max-range": "Максимальна дальність польоту",
-          "max-speed": "Максимальна швидкість"
+          "max-speed": "Максимальна швидкість",
+          "save": "Зберегти"         
         },
       },
     },

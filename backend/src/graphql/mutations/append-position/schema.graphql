@@ -12,3 +12,6 @@ input AppendPositionInput {
   timestamp: DateTime!
 }
 
+type Subscription {
+  droneUpdated: Drone!
+}

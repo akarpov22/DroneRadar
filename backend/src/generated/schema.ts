@@ -235,6 +235,11 @@ export type RegisterDroneIfNotExistsInput = {
   serial: Scalars['String']['input'];
 };
 
+export type Subscription = {
+  __typename?: 'Subscription';
+  droneUpdated: Drone;
+};
+
 
 
 export type ResolverTypeWrapper<T> = Promise<T> | T;
@@ -328,6 +333,7 @@ export type ResolversTypes = {
   Region: ResolverTypeWrapper<PrismaRegion>;
   RegisterDroneIfNotExistsInput: RegisterDroneIfNotExistsInput;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
+  Subscription: ResolverTypeWrapper<{}>;
 };
 
 /** Mapping between all available schema types and the resolvers parents */
@@ -354,6 +360,7 @@ export type ResolversParentTypes = {
   Region: PrismaRegion;
   RegisterDroneIfNotExistsInput: RegisterDroneIfNotExistsInput;
   String: Scalars['String']['output'];
+  Subscription: {};
 };
 
 export interface DateTimeScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['DateTime'], any> {
@@ -446,6 +453,10 @@ export type RegionResolvers<ContextType = Context, ParentType extends ResolversP
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type SubscriptionResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Subscription'] = ResolversParentTypes['Subscription']> = {
+  droneUpdated?: SubscriptionResolver<ResolversTypes['Drone'], "droneUpdated", ParentType, ContextType>;
+};
+
 export type Resolvers<ContextType = Context> = {
   DateTime?: GraphQLScalarType;
   Drone?: DroneResolvers<ContextType>;
@@ -456,5 +467,6 @@ export type Resolvers<ContextType = Context> = {
   Position?: PositionResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   Region?: RegionResolvers<ContextType>;
+  Subscription?: SubscriptionResolvers<ContextType>;
 };
 

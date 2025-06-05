@@ -1,4 +1,5 @@
 import { MutationResolvers } from "../../../generated/schema";
+import { pubsub } from "../../../context";
 
 export const appendPosition: MutationResolvers['appendPosition'] = async (_, { input }, { prisma }) => {
 
@@ -26,7 +27,7 @@ export const appendPosition: MutationResolvers['appendPosition'] = async (_, { i
     throw new Error("No active drone session found.");
   }
 
-  return prisma.position.create({
+  const newPosition = prisma.position.create({
     data: {
       sessionId: session.id,
       latitude,
@@ -37,4 +38,14 @@ export const appendPosition: MutationResolvers['appendPosition'] = async (_, { i
       recordedAt: new Date(timestamp),
     },
   });
+
+  const updatedDrone = await prisma.drone.findUnique({
+    where: { id: input.droneId },
+  });
+  
+  await pubsub.publish('DRONE_UPDATED', {
+    droneUpdated: updatedDrone,
+  });
+
+  return newPosition
   }

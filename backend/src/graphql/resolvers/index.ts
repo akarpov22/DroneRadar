@@ -7,6 +7,7 @@ import { positionResolvers } from "../types/position";
 import { queryResolvers } from "../types/query";
 import { regionResolvers } from "../types/region";
 import { mutationResolvers } from "./mutation";
+import { subscriptionResolvers } from "./subscription";
 
 export const resolvers = {
     Query: queryResolvers,
@@ -17,5 +18,6 @@ export const resolvers = {
     Operator: operatorResolvers,
     Position: positionResolvers,
     Region: regionResolvers,
+    Subscription: subscriptionResolvers,
     ...dateTimeScalar
 }

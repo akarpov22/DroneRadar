@@ -12,7 +12,6 @@ export type Region = {
     altitude: number | null;
     latitude: number;
     longitude: number;
-    recordedAt: string
     speed: number | null;
     heading: number | null;
   };
@@ -54,7 +53,6 @@ const DRONE_UPDATED = gql`
             altitude
             latitude
             longitude
-            recordedAt
             speed
             heading
         }

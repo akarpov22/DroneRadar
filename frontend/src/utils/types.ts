@@ -12,6 +12,7 @@ export type Region = {
     longitude: number;
     speed: number | null;
     heading: number | null;
+    recordedAt: string
   };
   
 

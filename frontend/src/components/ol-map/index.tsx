@@ -39,7 +39,15 @@ export const OlMap: React.FC = () => {
     });
 
     droneFeature.set('droneId', drone.id)
-    
+    droneFeature.set('isExpired', false)
+
+
+    if (currentPosition?.recordedAt){
+    const now = Date.now();
+    const then = new Date(currentPosition?.recordedAt).getTime();
+    droneFeature.set('isExpired', (now - then) > 60_000)
+    }
+
     droneFeature.setStyle(new Style({
       image: new Icon({
         anchor: [0.5, 1],
@@ -63,6 +71,8 @@ export const OlMap: React.FC = () => {
       geometry: new LineString(path ?? []),
     });
     
+    lineFeature.set('droneId', drone.id)
+
     lineFeature.setStyle(new Style({
       stroke: new Stroke({
         color: 'red',
@@ -121,10 +131,10 @@ export const OlMap: React.FC = () => {
 
   useEffect(() => {
     droneSource.clear()
-    droneSource.addFeatures(droneFeatures)
+    droneSource.addFeatures(droneFeatures.filter(drone => !drone.get('isExpired')))
   
     dronePathSource.clear()
-    dronePathSource.addFeatures(dronePathFeatures)  
+    dronePathSource.addFeatures(dronePathFeatures.filter(path => path.get('droneId') === selectedDrone?.id))  
   }, [droneFeatures, dronePathFeatures])
 
   return (

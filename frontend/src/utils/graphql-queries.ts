@@ -38,6 +38,7 @@ export const DRONE_UPDATED = gql`
             longitude
             speed
             heading
+            recordedAt
         }
     }
       createdAt

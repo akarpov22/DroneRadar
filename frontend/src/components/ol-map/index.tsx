@@ -17,10 +17,8 @@ import Stroke from 'ol/style/Stroke';
 import { useDroneSelection } from '../drone-selection-provider';
 
 export const OlMap: React.FC = () => {
-  const { drones, models } = useDrones()
+  const { drones } = useDrones()
   const dronesRef = useRef(drones);
-
-  console.log(models)
 
   const {selectedDrone, setSelectedDrone} = useDroneSelection()
     const [droneSource] = useState<VectorSource<Feature<Point>>>(new VectorSource({

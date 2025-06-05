@@ -16,14 +16,27 @@ i18n
         translation: {
           "yours-drone": 'Yours drone?',
           "enter-serial-number": 'Enter serial number',
-          "manage": "Manage"
+          "manage": "Manage",
+          "select-model": "Select model",
+          "drone-model": "Drone model",
+          "name": "Name",
+          "manufacturer": "Manufacturer",
+          "max-range": "Max range",
+          "max-speed": "Max speed"
+          
         },
       },
       uk: {
         translation: {
           "yours-drone": 'Ваш дрон?',
           "enter-serial-number": "Введіть серійний номер",
-          "manage": "Керувати"
+          "manage": "Керувати",
+          "select-model": "Вибрати модель",
+          "drone-model": "Модель дрону",
+          "name": "Ім'я",
+          "manufacturer": "Виробник",
+          "max-range": "Максимальна дальність польоту",
+          "max-speed": "Максимальна швидкість"
         },
       },
     },

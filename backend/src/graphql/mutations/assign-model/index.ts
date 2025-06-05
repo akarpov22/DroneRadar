@@ -4,11 +4,11 @@ export const assignModel: MutationResolvers['assignModel'] = async (_, { input }
   const { droneId, modelId } = input;
 
   const drone = await prisma.drone.findUnique({
-    where: { serial: droneId },
+    where: { id: droneId },
   });
 
   if (!drone) {
-    throw new Error("Drone with this serial number not found.");
+    throw new Error("Drone with this id number not found.");
   }
 
   const updated = await prisma.drone.update({

@@ -27,7 +27,7 @@ export type Drone = {
     id: string;
     name: string;
     serial: string | null;
-    model: string;
+    model: Model;
     operator: string;
     createdAt: string;
     sessions: Session[]

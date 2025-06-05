@@ -2,21 +2,33 @@ import { Button, Input, Text, VStack } from "@chakra-ui/react"
 import { Drone } from "../../utils/types" 
 import { useTranslation } from "react-i18next"
 import { useState } from "react"
+import { useDrones } from "../drone-data-provider"
+import { Select } from "chakra-react-select"
+import { ModelDescription } from "./model-description"
 
 type DroneMenuProps = {drone: Drone | undefined}
 
 export const DroneMenu = ({drone}: DroneMenuProps) => {
+    const { models } = useDrones();
     const { t } = useTranslation();
     const [isAccessGranted, setIsAccessGranted] = useState(false);
     const [serialNumber, setSerialNumber] = useState('')
+    const [selectedModel, setSelectedModel] = useState<string | null>()
+
+    const options = models.map(model => (
+        {
+           label: `${model.manufacturer} ${model.name}`,
+           value: model.id
+        }));
+    const defaultOption = options.find(option => option.value === drone?.model.id)
 
     if (!drone)
         return null;
 
-    console.log(drone)
     if (!isAccessGranted)
         return (
             <VStack w={'90%'}>
+                <ModelDescription drone={drone}/>
                 <Text w={'100%'} textAlign={'left'} fontWeight={'semibold'} mt={5}>{t('yours-drone')}</Text>
                 <Input type="text" placeholder={`${t('enter-serial-number')}...`} variant={'subtle'} onInput={(e: React.ChangeEvent<HTMLInputElement>) => setSerialNumber(e.target.value)}/>
                 <Button ml={'auto'} size={'xs'} 
@@ -32,7 +44,16 @@ export const DroneMenu = ({drone}: DroneMenuProps) => {
 
     return (
         <VStack w={'90%'}>
-            <Text>Authorized</Text>
+            <Text w={'100%'} textAlign={'left'} fontWeight={'semibold'} mt={5}>{t('drone-model')}</Text>
+            <Select 
+            placeholder={t('select-model')}
+            value={options.find(opt => opt.value === selectedModel)}
+            onChange={(option) => {
+                setSelectedModel(option?.value ?? null)
+            }}
+            defaultValue={defaultOption}
+            options={options}
+            />
         </VStack>
     )
 }

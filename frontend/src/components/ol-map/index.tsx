@@ -17,6 +17,8 @@ import Stroke from 'ol/style/Stroke';
 
 export const OlMap: React.FC = () => {
   const drones = useDrones()
+
+  const [selectedDroneId, setSelectedDroneId] = useState<string>();
   const [droneSource] = useState<VectorSource<Feature<Point>>>(new VectorSource({
     features: [],
   }))
@@ -33,19 +35,23 @@ export const OlMap: React.FC = () => {
     const droneFeature = new Feature({
       geometry: new Point(coords),
     });
+
+    droneFeature.set('droneId', drone.id)
     
     droneFeature.setStyle(new Style({
       image: new Icon({
         anchor: [0.5, 1],
         scale: 0.02,
         src: '/assets/drone.png',
-        rotation: currentPosition?.heading ?? 0
+        rotation: currentPosition?.heading ?? 0,
+        color: selectedDroneId === drone.id ? '#ffff00' : undefined, 
       }),
     }));
 
     return droneFeature
   })
 
+  useEffect(() => {console.log(selectedDroneId)}, [selectedDroneId])
   const dronePathFeatures = drones.map(drone => {
     const currentSession = getLast(drone.sessions)
 
@@ -92,6 +98,17 @@ export const OlMap: React.FC = () => {
         projection: 'EPSG:3857',
       }),
     });
+
+    map.on('click', (evt) => {
+      setSelectedDroneId(undefined)
+      map.forEachFeatureAtPixel(evt.pixel, (feature) => {
+        const id = feature.get('droneId');
+        if (id) {
+          setSelectedDroneId(prev => (prev === id ? null : id));
+        }
+      });
+    });
+
     return () => map.setTarget(undefined); 
   }, []);
 

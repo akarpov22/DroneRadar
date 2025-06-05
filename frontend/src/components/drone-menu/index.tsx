@@ -23,7 +23,7 @@ export const DroneMenu = ({drone}: DroneMenuProps) => {
            label: `${model.manufacturer} ${model.name}`,
            value: model.id
         }));
-    const defaultOption = options.find(option => option.value === drone?.model.id)
+    const defaultOption = options.find(option => option.value === drone?.model?.id)
 
     if (!drone)
         return null;

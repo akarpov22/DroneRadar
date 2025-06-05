@@ -1,9 +1,15 @@
-import { Box,  } from '@chakra-ui/react';
-import { DroneMap } from './components/drone-map';
+import { DroneRadar } from './components/drone-radar';
+import { ApolloProvider } from '@apollo/client';
+import { client } from './apollo-client';
+import { DroneDataProvider } from './components/drone-data-provider';
 
 function App() {
   return (
-      <DroneMap />
+    <ApolloProvider client={client}>
+      <DroneDataProvider>
+      <DroneRadar />
+      </DroneDataProvider>
+      </ApolloProvider>
   );
 }
 

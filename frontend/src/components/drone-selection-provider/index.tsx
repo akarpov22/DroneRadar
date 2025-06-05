@@ -1,5 +1,5 @@
 import { createContext, Dispatch, SetStateAction, useContext, useState } from "react";
-import { Drone } from "../drone-data-provider";
+import { Drone } from "../../utils/types";
 
 const DroneSelectionContext = createContext<{selectedDrone: Drone | undefined, setSelectedDrone: Dispatch<SetStateAction<undefined | Drone>>} | null>(null);
 

@@ -6,5 +6,6 @@ input CreateDroneModelInput {
   name: String!
   manufacturer: String!
   maxRange: Float!
+  maxSpeed: Float
 }
 

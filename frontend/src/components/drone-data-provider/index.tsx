@@ -1,72 +1,18 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { gql, useSubscription } from '@apollo/client';
+import { useQuery, useSubscription } from '@apollo/client';
+import { DRONE_MODELS, DRONE_UPDATED } from '../../utils/graphql-queries';
+import { Drone, Model } from '../../utils/types';
 
-export type Region = {
-    id: string;
-    name: string;
-    regionCode: string;
-  };
-
-  export type Position = {
-    id: string
-    altitude: number | null;
-    latitude: number;
-    longitude: number;
-    speed: number | null;
-    heading: number | null;
-  };
   
-
-export type Session = {
-    id: string
-    startedAt: string
-    endedAt: string | null;
-    // region: Region
-    positions: Position[]
-}
-
-export type Drone = {
-    id: string;
-    name: string;
-    serial: string | null;
-    model: string;
-    operator: string;
-    createdAt: string;
-    sessions: Session[]
-  };
-  
-
-const DRONE_UPDATED = gql`
-  subscription {
-    droneUpdated {
-      id
-      name
-      serial
-
-      sessions {
-        id
-        startedAt
-        endedAt
-
-        positions {
-            id
-            altitude
-            latitude
-            longitude
-            speed
-            heading
-        }
-    }
-      createdAt
-    }
-  }
-`;
-
-const DroneContext = createContext<Drone[]>([]);
+const DroneContext = createContext<{ drones: Drone[], models: Model[]}>({ drones: [], models: []});
 
 export const DroneDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { data } = useSubscription<{ droneUpdated: Drone }>(DRONE_UPDATED);
+
+  const { data: droneModels } = useQuery<{ droneModels: Model[] }>(DRONE_MODELS);
+
   const [drones, setDrone] = useState<Drone[]>([]);
+  const [models, setModels] = useState<Model[]>([]);
 
   useEffect(() => {
     if (data?.droneUpdated) {
@@ -75,8 +21,13 @@ export const DroneDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   }, [data]);
 
+  useEffect(() => {
+    if (droneModels?.droneModels) 
+      setModels(droneModels?.droneModels);
+  }, [droneModels]);
+
   return (
-    <DroneContext.Provider value={drones}>
+    <DroneContext.Provider value={{drones, models}}>
       {children}
     </DroneContext.Provider>
   );

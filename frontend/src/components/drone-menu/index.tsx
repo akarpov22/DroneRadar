@@ -1,5 +1,5 @@
 import { Button, Input, Text, VStack } from "@chakra-ui/react"
-import { Drone } from "../drone-data-provider"
+import { Drone } from "../../utils/types" 
 import { useTranslation } from "react-i18next"
 import { useState } from "react"
 
@@ -13,6 +13,7 @@ export const DroneMenu = ({drone}: DroneMenuProps) => {
     if (!drone)
         return null;
 
+    console.log(drone)
     if (!isAccessGranted)
         return (
             <VStack w={'90%'}>

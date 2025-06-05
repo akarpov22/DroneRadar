@@ -42,6 +42,7 @@ export type AssignOperatorInput = {
 export type CreateDroneModelInput = {
   manufacturer: Scalars['String']['input'];
   maxRange: Scalars['Float']['input'];
+  maxSpeed?: InputMaybe<Scalars['Float']['input']>;
   name: Scalars['String']['input'];
 };
 

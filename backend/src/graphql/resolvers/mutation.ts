@@ -7,6 +7,7 @@ import { endSession } from "../mutations/end-seesion";
 import { createSession } from "../mutations/create-session";
 import { createOperator } from "../mutations/create-operator";
 import { createRegion } from "../mutations/create-region";
+import { createDroneModel } from "../mutations/create-drone-model";
 
 export const mutationResolvers: MutationResolvers = {
     registerDroneIfNotExists,
@@ -16,5 +17,6 @@ export const mutationResolvers: MutationResolvers = {
     endSession,
     createSession,
     createOperator,
-    createRegion
+    createRegion,
+    createDroneModel
 }

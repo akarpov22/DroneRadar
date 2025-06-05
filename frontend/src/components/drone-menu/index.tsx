@@ -1,77 +1,30 @@
-import { Button, Input, Text, VStack } from "@chakra-ui/react"
-import { Drone } from "../../utils/types" 
+import { Button, Flex, Heading, useBreakpointValue, VStack } from "@chakra-ui/react"
 import { useTranslation } from "react-i18next"
-import { useState } from "react"
-import { useDrones } from "../drone-data-provider"
-import { Select } from "chakra-react-select"
-import { ModelDescription } from "./model-description"
-import { useMutation } from "@apollo/client"
-import { ASSIGN_MODEL } from "../../utils/graphql-queries"
+import { useDroneSelection } from "../drone-selection-provider"
+import { EditMenu } from "./edit"
 
-type DroneMenuProps = {drone: Drone | undefined}
 
-export const DroneMenu = ({drone}: DroneMenuProps) => {
-    const [ assignModelMutation ] = useMutation(ASSIGN_MODEL, {refetchQueries: 'active'})
-    const { models } = useDrones();
-    const { t } = useTranslation();
-    const [isAccessGranted, setIsAccessGranted] = useState(false);
-    const [serialNumber, setSerialNumber] = useState('')
-    const [selectedModel, setSelectedModel] = useState<string | null>()
+export const DroneMenu = () => {
+    const { selectedDrone, isDisplayOwned, setIsDisplayOwned} = useDroneSelection();
+    const { i18n, t } = useTranslation()
+    const isEnglish = i18n.language === 'en'
+    const isDesktop = useBreakpointValue({ base: false, md: true });
 
-    const options = models.map(model => (
-        {
-           label: `${model.manufacturer} ${model.name}`,
-           value: model.id
-        }));
-    const defaultOption = options.find(option => option.value === drone?.model?.id)
-
-    if (!drone)
-        return null;
-
-    if (!isAccessGranted)
-        return (
-            <VStack w={'90%'}>
-                <ModelDescription drone={drone}/>
-                <Text w={'100%'} textAlign={'left'} fontWeight={'semibold'} mt={5}>{t('yours-drone')}</Text>
-                <Input type="text" placeholder={`${t('enter-serial-number')}...`} variant={'subtle'} onInput={(e: React.ChangeEvent<HTMLInputElement>) => setSerialNumber(e.target.value)}/>
-                <Button ml={'auto'} size={'xs'} 
-                onClick={() => {
-                    if (serialNumber === drone.serial){
-                        const myDrones: string[] = JSON.parse(localStorage.getItem('myDrones') ?? '[]');
-                        localStorage.setItem('myDrones', JSON.stringify(myDrones.concat(drone.serial)));
-                        setIsAccessGranted(true)
-                    }
-                }}
-            >
-                {t('manage')}
-            </Button>
-            </VStack>
-    )
 
     return (
-        <VStack w={'90%'}>
-            <Text w={'100%'} textAlign={'left'} fontWeight={'semibold'} mt={5}>{t('drone-model')}</Text>
-            <Select 
-            placeholder={t('select-model')}
-            value={options.find(opt => opt.value === selectedModel)}
-            onChange={(option) => {
-                setSelectedModel(option?.value ?? null)
-            }}
-            defaultValue={defaultOption}
-            options={options}
-            />
-            <Button ml={'auto'} size={'xs'} 
-                onClick={(e) => {
-                    assignModelMutation({variables:{ input: {
-                        droneId: drone.id,
-                        modelId: selectedModel
-                        }
-            }})
-                }}
-            >
-                {t('save')}
-            </Button>
-            
+        <VStack w={isDesktop?'20%':'100%'}  h={'100%'}>
+            <Flex align="center" justify="space-between" w={'100%'}>
+                    <Heading>Drone Radar</Heading>
+                    <Button size={'xs'} onClick={() => i18n.changeLanguage(isEnglish?'uk':'en')} mx={'auto'} my={'auto'}>
+                        {isEnglish?"Українська": "English"}
+                    </Button>
+            </Flex>
+            {selectedDrone && <EditMenu drone={selectedDrone}/>}
+
+            {isDesktop &&
+            <Button size={'xs'} mt={'auto'} mb={3} onClick={() => setIsDisplayOwned(!isDisplayOwned)}>
+                {isDisplayOwned?t('show-all'):t('show-only-owned')}
+            </Button>}
         </VStack>
     )
 }

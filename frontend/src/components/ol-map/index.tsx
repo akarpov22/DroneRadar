@@ -89,8 +89,8 @@ export const OlMap: React.FC = () => {
         new TileLayer({
           source: new OSM(),
         }),
+        dronePathLayer,
         droneLayer,
-        dronePathLayer
       ],
       view: new View({
         center: [0, 0],

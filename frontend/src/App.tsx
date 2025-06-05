@@ -1,11 +1,9 @@
-import { Box, Button, Text } from '@chakra-ui/react';
-import {  OlMap } from './components/map';
+import { Box,  } from '@chakra-ui/react';
+import { DroneMap } from './components/drone-map';
 
 function App() {
   return (
-    <Box p={4}>
-      <OlMap />
-    </Box>
+      <DroneMap />
   );
 }
 

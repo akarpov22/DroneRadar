@@ -1,0 +1,9 @@
+type Mutation {
+    createRegion(input: CreateRegionInput!): Region!
+}
+
+input CreateRegionInput {
+  name: String!
+  regionCode: String!
+  }
+

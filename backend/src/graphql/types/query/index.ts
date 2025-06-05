@@ -13,7 +13,9 @@ export const queryResolvers: QueryResolvers = {
         if (!model) throw new Error('Drone model not found');
         return model;
     },
-    droneSessions: (_, __, { prisma }) => prisma.droneSession.findMany(),
+    droneSessions: async (_, __, { prisma }) => {
+        return await prisma.droneSession.findMany()
+    },
     droneSession: async (_, { id }, { prisma }) => {
         const session = await prisma.droneSession.findUnique({
             where: { id },

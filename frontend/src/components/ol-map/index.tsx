@@ -17,7 +17,13 @@ import Stroke from 'ol/style/Stroke';
 
 export const OlMap: React.FC = () => {
   const drones = useDrones()
-  const [map, setMap] = useState<Map>()
+  const [droneSource] = useState<VectorSource<Feature<Point>>>(new VectorSource({
+    features: [],
+  }))
+  const [dronePathSource] = useState<  VectorSource<Feature<LineString>>  >(new VectorSource({
+    features: [],
+  }))
+
   const mapRef = useRef<HTMLDivElement>(null);
 
   const droneFeatures = drones.map(drone => {
@@ -53,33 +59,23 @@ export const OlMap: React.FC = () => {
     lineFeature.setStyle(new Style({
       stroke: new Stroke({
         color: 'red',
-        width: 5,
+        width: 3,
       }),
     }));
 
     return lineFeature
   });
 
-  const droneSource = new VectorSource({
-    features: droneFeatures,
-  });
-
-  
-  const droneLayer = new VectorLayer({
-    source: droneSource,
-  });
-
-  const dronePathSource = new VectorSource({
-    features: dronePathFeatures,
-  });
-
-
-  const dronePathLayer = new VectorLayer({
-    source: dronePathSource,
-  });
-
   useEffect(() => {
     if (!mapRef.current) return;
+
+    const droneLayer = new VectorLayer({
+      source: droneSource,
+    });
+
+    const dronePathLayer = new VectorLayer({
+      source: dronePathSource,
+    });
 
     const map = new Map({
       target: mapRef.current,
@@ -87,6 +83,8 @@ export const OlMap: React.FC = () => {
         new TileLayer({
           source: new OSM(),
         }),
+        droneLayer,
+        dronePathLayer
       ],
       view: new View({
         center: [0, 0],
@@ -94,16 +92,15 @@ export const OlMap: React.FC = () => {
         projection: 'EPSG:3857',
       }),
     });
-
-    setMap(map);
     return () => map.setTarget(undefined); 
   }, []);
 
   useEffect(() => {
-    map?.removeLayer(dronePathLayer)
-    map?.removeLayer(droneLayer)
-    map?.addLayer(dronePathLayer)
-    map?.addLayer(droneLayer)
+    droneSource.clear()
+    droneSource.addFeatures(droneFeatures)
+  
+    dronePathSource.clear()
+    dronePathSource.addFeatures(dronePathFeatures)  
   }, [droneFeatures, dronePathFeatures])
 
   return (

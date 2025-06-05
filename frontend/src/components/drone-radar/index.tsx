@@ -10,7 +10,6 @@ export const DroneRadar = () => {
     const { i18n } = useTranslation()
     const isEnglish = i18n.language === 'en'
 
-    console.log(selectedDrone)
     return (
     <HStack w={'100%'} h={'100vh'}>
         <VStack w={'20%'}  h={'100%'}>

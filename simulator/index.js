@@ -59,7 +59,7 @@ async function main() {
 
     await client.request(APPEND_POSITION, { input });
     console.log('📡 Sent position:', input);
-
+    console.log("Serial: ", serial)
     await delay(5_000);
   }
 }

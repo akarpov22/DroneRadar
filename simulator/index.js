@@ -60,7 +60,7 @@ async function main() {
     await client.request(APPEND_POSITION, { input });
     console.log('📡 Sent position:', input);
 
-    await delay(30_000); // 30 seconds
+    await delay(30_000);
   }
 }
 

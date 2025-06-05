@@ -18,6 +18,7 @@ import { useDroneSelection } from '../drone-selection-provider';
 
 export const OlMap: React.FC = () => {
   const drones = useDrones()
+  const dronesRef = useRef(drones);
 
   const {selectedDrone, setSelectedDrone} = useDroneSelection()
     const [droneSource] = useState<VectorSource<Feature<Point>>>(new VectorSource({
@@ -73,6 +74,10 @@ export const OlMap: React.FC = () => {
   });
 
   useEffect(() => {
+    dronesRef.current = drones;
+  }, [drones])
+
+  useEffect(() => {
     if (!mapRef.current) return;
 
     const droneLayer = new VectorLayer({
@@ -100,10 +105,9 @@ export const OlMap: React.FC = () => {
     });
 
     map.on('click', (evt) => {
-      setSelectedDrone(undefined)
       map.forEachFeatureAtPixel(evt.pixel, (feature) => {
         const id = feature.get('droneId');
-        const currentDrone = drones.find(drone => drone.id === id)
+        const currentDrone = dronesRef.current.find(drone => drone.id === id)
         if (id) {
           setSelectedDrone(prev => (prev?.id === id ? undefined : currentDrone));
         }

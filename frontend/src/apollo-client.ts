@@ -1,4 +1,3 @@
-// apolloClient.ts
 import { ApolloClient, InMemoryCache, HttpLink, split } from '@apollo/client';
 import { WebSocketLink } from '@apollo/client/link/ws';
 import { SubscriptionClient } from 'subscriptions-transport-ws';

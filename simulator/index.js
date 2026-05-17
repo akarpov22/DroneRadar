@@ -15,6 +15,19 @@ if (!regionCode) {
 
 const client = new GraphQLClient(graphqlUrl);
 
+const sendIntervalMs = Number(process.env.SIMULATION_INTERVAL_MS ?? 500);
+const speedMultiplier = Number(process.env.SIMULATION_SPEED_MULTIPLIER ?? 1);
+const targetSpeedKmh = Number(process.env.SIMULATION_SPEED_KMH ?? 20);
+
+const route = [
+  { latitude: 30.5200, longitude: 50.4500, altitude: 105 },
+  { latitude: 30.5232, longitude: 50.4526, altitude: 118 },
+  { latitude: 30.5268, longitude: 50.4564, altitude: 130 },
+  { latitude: 30.5249, longitude: 50.4610, altitude: 122 },
+  { latitude: 30.5215, longitude: 50.4592, altitude: 112 },
+  { latitude: 30.5194, longitude: 50.4541, altitude: 108 }
+];
+
 const REGISTER_DRONE = gql`
   mutation RegisterDroneIfNotExists($serial: String!, $regionCode: String!, $name: String!) {
     registerDroneIfNotExists(input: { serial: $serial, regionCode: $regionCode, name: $name }) {
@@ -43,9 +56,88 @@ async function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+function toRadians(degrees) {
+  return degrees * Math.PI / 180;
+}
+
+function toDegrees(radians) {
+  return radians * 180 / Math.PI;
+}
+
+function distanceMeters(from, to) {
+  const earthRadiusMeters = 6371000;
+  const lat1 = toRadians(from.latitude);
+  const lat2 = toRadians(to.latitude);
+  const deltaLat = toRadians(to.latitude - from.latitude);
+  const deltaLon = toRadians(to.longitude - from.longitude);
+
+  const a = Math.sin(deltaLat / 2) ** 2
+    + Math.cos(lat1) * Math.cos(lat2) * Math.sin(deltaLon / 2) ** 2;
+
+  return earthRadiusMeters * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function segmentDurationMs(from, to) {
+  const targetSpeedMetersPerSecond = targetSpeedKmh / 3.6;
+
+  return distanceMeters(from, to) / targetSpeedMetersPerSecond * 1000;
+}
+
+const routeDurationMs = route.reduce((sum, point, index) => {
+  const nextPoint = route[(index + 1) % route.length];
+
+  return sum + segmentDurationMs(point, nextPoint);
+}, 0);
+
+function bearingDegrees(from, to) {
+  const lat1 = toRadians(from.latitude);
+  const lat2 = toRadians(to.latitude);
+  const deltaLon = toRadians(to.longitude - from.longitude);
+
+  const y = Math.sin(deltaLon) * Math.cos(lat2);
+  const x = Math.cos(lat1) * Math.sin(lat2)
+    - Math.sin(lat1) * Math.cos(lat2) * Math.cos(deltaLon);
+
+  return (toDegrees(Math.atan2(y, x)) + 360) % 360;
+}
+
+function lerp(from, to, progress) {
+  return from + (to - from) * progress;
+}
+
+function getRoutePosition(elapsedMs) {
+  let timeOnRouteMs = (elapsedMs * speedMultiplier) % routeDurationMs;
+
+  for (let index = 0; index < route.length; index += 1) {
+    const from = route[index];
+    const to = route[(index + 1) % route.length];
+    const durationMs = segmentDurationMs(from, to);
+
+    if (timeOnRouteMs > durationMs) {
+      timeOnRouteMs -= durationMs;
+      continue;
+    }
+
+    const progress = timeOnRouteMs / durationMs;
+    const speedKmh = targetSpeedKmh * speedMultiplier;
+    const liveWave = Math.sin(elapsedMs / 4500);
+
+    return {
+      latitude: lerp(from.latitude, to.latitude, progress),
+      longitude: lerp(from.longitude, to.longitude, progress),
+      altitude: lerp(from.altitude, to.altitude, progress) + liveWave * 1.5,
+      speed: speedKmh + Math.sin(elapsedMs / 3000) * 0.7,
+      heading: bearingDegrees(from, to)
+    };
+  }
+
+  return route[0];
+}
+
 async function main() {
   console.log('🔧 Starting drone simulation...');
   console.log(`📡 GraphQL endpoint: ${graphqlUrl}`);
+  console.log(`🗺️ Route points: ${route.length}, update interval: ${sendIntervalMs}ms, speed: ${targetSpeedKmh} km/h`);
 
   const serial = process.env.DRONE_SERIAL ?? 'SN-' + Math.floor(Math.random() * 100000);
   const name = 'Drone-' + uuidv4().slice(0, 8);
@@ -58,21 +150,24 @@ async function main() {
 
   console.log(`🚁 Drone "${name}" (serial: ${serial}) registered and session ${sessionId} started.`);
 
+  const startedAt = Date.now();
+
   while (true) {
+    const position = getRoutePosition(Date.now() - startedAt);
     const input = {
       droneId,
-      latitude: 30.52 + Math.random() * 0.01,
-      longitude: 50.45 + Math.random() * 0.01,
-      altitude: 100 + Math.random() * 20,
-      speed: 10 + Math.random() * 5,
-      heading: Math.random() * 360,
+      latitude: Number(position.latitude.toFixed(6)),
+      longitude: Number(position.longitude.toFixed(6)),
+      altitude: Number(position.altitude.toFixed(1)),
+      speed: Number(position.speed.toFixed(1)),
+      heading: Number(position.heading.toFixed(1)),
       timestamp: new Date().toISOString()
     };
 
     await client.request(APPEND_POSITION, { input });
     console.log('📡 Sent position:', input);
-    console.log("Serial: ", serial)
-    await delay(5_000);
+    console.log('Serial: ', serial);
+    await delay(sendIntervalMs);
   }
 }
 

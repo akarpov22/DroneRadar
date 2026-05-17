@@ -16,6 +16,8 @@ import { getLast } from '../../utils/array';
 import Stroke from 'ol/style/Stroke';
 import { useDroneSelection } from '../drone-selection-provider';
 
+const degreesToRadians = (degrees: number) => degrees * Math.PI / 180;
+
 export const OlMap: React.FC = () => {
   const { drones } = useDrones()
   const dronesRef = useRef(drones);
@@ -32,7 +34,7 @@ export const OlMap: React.FC = () => {
 
   const droneFeatures = drones.map(drone => {
     const currentPosition = getLast(getLast(drone.sessions)?.positions ?? [])
-    const coords = fromLonLat([currentPosition?.latitude ?? 0, currentPosition?.longitude ?? 0]);
+    const coords = fromLonLat([currentPosition?.longitude ?? 0, currentPosition?.latitude ?? 0]);
 
     const droneFeature = new Feature({
       geometry: new Point(coords),
@@ -54,7 +56,7 @@ export const OlMap: React.FC = () => {
         anchor: [0.5, 1],
         scale: 0.02,
         src: '/assets/drone.png',
-        rotation: currentPosition?.heading ?? 0,
+        rotation: degreesToRadians(currentPosition?.heading ?? 0),
         color: selectedDrone?.id === drone.id ? '#ffff00' : undefined, 
       }),
     }));
@@ -65,7 +67,7 @@ export const OlMap: React.FC = () => {
   const dronePathFeatures = drones.map(drone => {
     const currentSession = getLast(drone.sessions)
 
-    const path = currentSession?.positions.map(position => fromLonLat([position.latitude, position.longitude]))
+    const path = currentSession?.positions.map(position => fromLonLat([position.longitude, position.latitude]))
 
 
     const lineFeature = new Feature({

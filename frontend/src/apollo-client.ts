@@ -3,11 +3,22 @@ import { WebSocketLink } from '@apollo/client/link/ws';
 import { SubscriptionClient } from 'subscriptions-transport-ws';
 import { getMainDefinition } from '@apollo/client/utilities';
 
+const httpUri = import.meta.env.VITE_GRAPHQL_HTTP;
+const wsUri = import.meta.env.VITE_GRAPHQL_WS;
+
+if (!httpUri) {
+  throw new Error('Missing required environment variable: VITE_GRAPHQL_HTTP');
+}
+
+if (!wsUri) {
+  throw new Error('Missing required environment variable: VITE_GRAPHQL_WS');
+}
+
 const httpLink = new HttpLink({
-  uri: 'http://localhost:4000/graphql',
+  uri: httpUri,
 });
 
-const wsClient = new SubscriptionClient('ws://localhost:4000/graphql', {
+const wsClient = new SubscriptionClient(wsUri, {
   reconnect: true,
 });
 

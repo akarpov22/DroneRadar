@@ -1,7 +1,19 @@
+import 'dotenv/config';
 import { GraphQLClient, gql } from 'graphql-request';
 import { v4 as uuidv4 } from 'uuid';
 
-const client = new GraphQLClient('http://localhost:4000/graphql');
+const graphqlUrl = process.env.GRAPHQL_URL;
+const regionCode = process.env.REGION_ID;
+
+if (!graphqlUrl) {
+  throw new Error('Missing required environment variable: GRAPHQL_URL');
+}
+
+if (!regionCode) {
+  throw new Error('Missing required environment variable: REGION_ID');
+}
+
+const client = new GraphQLClient(graphqlUrl);
 
 const REGISTER_DRONE = gql`
   mutation RegisterDroneIfNotExists($serial: String!, $regionCode: String!, $name: String!) {
@@ -33,10 +45,10 @@ async function delay(ms) {
 
 async function main() {
   console.log('🔧 Starting drone simulation...');
+  console.log(`📡 GraphQL endpoint: ${graphqlUrl}`);
 
-  const serial = 'SN-' + Math.floor(Math.random() * 100000);
+  const serial = process.env.DRONE_SERIAL ?? 'SN-' + Math.floor(Math.random() * 100000);
   const name = 'Drone-' + uuidv4().slice(0, 8);
-  const regionCode = 'UA-KY';
 
   const regRes = await client.request(REGISTER_DRONE, { serial, regionCode, name });
   const droneId = regRes.registerDroneIfNotExists.id;

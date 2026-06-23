@@ -1,6 +1,6 @@
 import { ApolloProvider } from '@apollo/client';
 import { useAuth0 } from '@auth0/auth0-react';
-import { useEffect, useMemo, useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import { createApolloClient } from '../../apollo-client';
 import { isAuth0Disabled } from '../../auth/config';
 import { client as devClient } from '../../apollo-client';
@@ -10,21 +10,20 @@ export const ApolloAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const getTokenRef = useRef<() => Promise<string | null>>(async () => null);
 
-  useEffect(() => {
-    getTokenRef.current = async () => {
-      if (!isAuthenticated) return null;
-      try {
-        return await getAccessTokenSilently({
-          authorizationParams: {
-            audience: import.meta.env.VITE_AUTH0_AUDIENCE,
-          },
-        });
-      } catch (err) {
-        console.error('Auth0 getAccessTokenSilently failed:', err);
-        return null;
-      }
-    };
-  }, [getAccessTokenSilently, isAuthenticated]);
+  // Update during render so the token getter is ready before child queries fire.
+  getTokenRef.current = async () => {
+    if (!isAuthenticated) return null;
+    try {
+      return await getAccessTokenSilently({
+        authorizationParams: {
+          audience: import.meta.env.VITE_AUTH0_AUDIENCE,
+        },
+      });
+    } catch (err) {
+      console.error('Auth0 getAccessTokenSilently failed:', err);
+      return null;
+    }
+  };
 
   const client = useMemo(() => {
     if (isAuth0Disabled) return devClient;

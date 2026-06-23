@@ -78,7 +78,10 @@ function AuthOverlayInner({ onLoginModalOpenChange }: AuthOverlayProps) {
   const toast = useToast();
   const hasAutoOpened = useRef(false);
 
-  const { data: meData } = useQuery(ME, { skip: !isAuthenticated });
+  const { data: meData } = useQuery(ME, {
+    skip: !isAuthenticated || isLoading,
+    fetchPolicy: 'network-only',
+  });
   const [registerDrone, { loading: registering }] = useMutation(REGISTER_DRONE);
 
   const role = meData?.me?.role;

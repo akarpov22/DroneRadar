@@ -32,6 +32,10 @@ export function createApolloClient(getAccessToken?: () => Promise<string | null>
     },
   );
 
+  wsClient.onConnected(() => console.log('[WS] connected', wsUri));
+  wsClient.onDisconnected(() => console.warn('[WS] disconnected'));
+  wsClient.onError((error) => console.error('[WS] error', error));
+
   const wsLink = new WebSocketLink(wsClient);
 
   const splitLink = split(

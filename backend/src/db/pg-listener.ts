@@ -3,10 +3,18 @@ import { prisma, pubsub } from '../context';
 import { publishDroneUpdated } from '../shared/publish-drone-updated';
 
 export function startPgListener() {
-  const connectionString = process.env.DATABASE_URL;
+  // Neon pooler does not forward LISTEN/NOTIFY — use a direct (non-pooler) URL when set.
+  const connectionString = process.env.DATABASE_LISTEN_URL ?? process.env.DATABASE_URL;
   if (!connectionString) {
     console.warn('DATABASE_URL not set — PG LISTEN disabled');
     return;
+  }
+
+  if (connectionString.includes('-pooler')) {
+    console.warn(
+      'DATABASE_URL uses Neon pooler — PG LISTEN/NOTIFY will not work. ' +
+      'Set DATABASE_LISTEN_URL to a direct Neon connection string, or rely on in-process publish.',
+    );
   }
 
   const client = new pg.Client({ connectionString });

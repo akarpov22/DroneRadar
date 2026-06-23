@@ -1,4 +1,5 @@
 import { MutationResolvers } from "../../../generated/schema";
+import { publishDroneUpdated } from "../../../shared/publish-drone-updated";
 
 export const appendPosition: MutationResolvers['appendPosition'] = async (_, { input }, { prisma }) => {
   const { droneId, latitude, longitude, altitude, heading, speed, timestamp } = input;
@@ -36,6 +37,8 @@ export const appendPosition: MutationResolvers['appendPosition'] = async (_, { i
       recordedAt: new Date(timestamp),
     },
   });
+
+  await publishDroneUpdated(prisma, drone.id);
 
   return position;
 };

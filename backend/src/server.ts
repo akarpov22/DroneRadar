@@ -13,7 +13,13 @@ import { getCorsOrigin } from './config/cors';
 async function startServer() {
   const app = express();
   app.set('trust proxy', 1);
-  app.use(cors({ origin: getCorsOrigin(), credentials: true }));
+  const corsOrigins = getCorsOrigin();
+  if (corsOrigins.length === 0) {
+    console.warn('CORS_ORIGINS is empty — browser requests from other origins will be blocked');
+  } else {
+    console.log(`CORS allowed origins: ${corsOrigins.join(', ')}`);
+  }
+  app.use(cors({ origin: corsOrigins, credentials: true }));
   const httpServer = createServer(app);
 
   const server = new ApolloServer({

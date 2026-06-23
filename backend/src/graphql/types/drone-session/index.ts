@@ -1,10 +1,13 @@
 import { DroneSessionResolvers } from "../../../generated/schema";
 
-export const droneSessionResolvers: DroneSessionResolvers = {
+export const droneSessionResolvers = {
     id: (parent) => parent.id,
-    drone: (parent, _, { prisma }) => prisma.drone.findUnique({where: {id: parent.droneId}}),
-    region: (parent, _, { prisma }) => prisma.region.findUnique({where: {id: parent.regionId}}),
+    drone: async (parent, _, { prisma }) =>
+      prisma.drone.findUnique({ where: { id: parent.droneId } }),
+    region: async (parent, _, { prisma }) =>
+      prisma.region.findUnique({ where: { id: parent.regionId } }),
     startedAt: (parent) => parent.startedAt,
     endedAt: (parent) => parent.endedAt,
-    positions: (parent, _, { prisma }) => prisma.position.findMany({where: {sessionId: parent.id}})
-}
+    positions: async (parent, _, { prisma }) =>
+      prisma.position.findMany({ where: { sessionId: parent.id } }),
+} as DroneSessionResolvers;

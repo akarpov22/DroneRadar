@@ -1,5 +1,5 @@
 import { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
-import { Drone as PrismaDrone, DroneModel as PrismaDroneModel, DroneSession as PrismaDroneSession, Operator as PrismaOperator, Position as PrismaPosition, Region as PrismaRegion } from '../prisma/client';
+import { Drone as PrismaDrone, DroneModel as PrismaDroneModel, DroneSession as PrismaDroneSession, Operator as PrismaOperator, Position as PrismaPosition, Region as PrismaRegion, User as PrismaUser } from '../prisma/client';
 import { Context } from '../context';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
@@ -8,6 +8,7 @@ export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: 
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
 export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
 export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
+export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 export type RequireFields<T, K extends keyof T> = Omit<T, K> & { [P in K]-?: NonNullable<T[P]> };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
@@ -68,6 +69,7 @@ export type Drone = {
   model?: Maybe<DroneModel>;
   name: Scalars['String']['output'];
   operator?: Maybe<Operator>;
+  pilot?: Maybe<User>;
   serial?: Maybe<Scalars['String']['output']>;
   sessions: Array<DroneSession>;
 };
@@ -106,6 +108,7 @@ export type Mutation = {
   createRegion: Region;
   createSession: DroneSession;
   endSession: DroneSession;
+  registerDrone: RegisterDronePayload;
   registerDroneIfNotExists: Drone;
 };
 
@@ -150,6 +153,11 @@ export type MutationEndSessionArgs = {
 };
 
 
+export type MutationRegisterDroneArgs = {
+  input: RegisterDroneInput;
+};
+
+
 export type MutationRegisterDroneIfNotExistsArgs = {
   input: RegisterDroneIfNotExistsInput;
 };
@@ -182,6 +190,7 @@ export type Query = {
   droneSession: DroneSession;
   droneSessions: Array<DroneSession>;
   drones: Array<Drone>;
+  me?: Maybe<User>;
   operator: Operator;
   operators: Array<Operator>;
   position: Position;
@@ -236,10 +245,36 @@ export type RegisterDroneIfNotExistsInput = {
   serial: Scalars['String']['input'];
 };
 
+export type RegisterDroneInput = {
+  name: Scalars['String']['input'];
+  regionCode: Scalars['String']['input'];
+  serial: Scalars['String']['input'];
+};
+
+export type RegisterDronePayload = {
+  __typename?: 'RegisterDronePayload';
+  deviceToken: Scalars['String']['output'];
+  drone: Drone;
+};
+
 export type Subscription = {
   __typename?: 'Subscription';
   droneUpdated: Drone;
 };
+
+export type User = {
+  __typename?: 'User';
+  createdAt: Scalars['DateTime']['output'];
+  email?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  role: UserRole;
+};
+
+export enum UserRole {
+  Admin = 'ADMIN',
+  Observer = 'OBSERVER',
+  Pilot = 'PILOT'
+}
 
 
 
@@ -333,8 +368,12 @@ export type ResolversTypes = {
   Query: ResolverTypeWrapper<{}>;
   Region: ResolverTypeWrapper<PrismaRegion>;
   RegisterDroneIfNotExistsInput: RegisterDroneIfNotExistsInput;
+  RegisterDroneInput: RegisterDroneInput;
+  RegisterDronePayload: ResolverTypeWrapper<Omit<RegisterDronePayload, 'drone'> & { drone: ResolversTypes['Drone'] }>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
   Subscription: ResolverTypeWrapper<{}>;
+  User: ResolverTypeWrapper<PrismaUser>;
+  UserRole: UserRole;
 };
 
 /** Mapping between all available schema types and the resolvers parents */
@@ -360,8 +399,11 @@ export type ResolversParentTypes = {
   Query: {};
   Region: PrismaRegion;
   RegisterDroneIfNotExistsInput: RegisterDroneIfNotExistsInput;
+  RegisterDroneInput: RegisterDroneInput;
+  RegisterDronePayload: Omit<RegisterDronePayload, 'drone'> & { drone: ResolversParentTypes['Drone'] };
   String: Scalars['String']['output'];
   Subscription: {};
+  User: PrismaUser;
 };
 
 export interface DateTimeScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['DateTime'], any> {
@@ -374,6 +416,7 @@ export type DroneResolvers<ContextType = Context, ParentType extends ResolversPa
   model?: Resolver<Maybe<ResolversTypes['DroneModel']>, ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   operator?: Resolver<Maybe<ResolversTypes['Operator']>, ParentType, ContextType>;
+  pilot?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
   serial?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   sessions?: Resolver<Array<ResolversTypes['DroneSession']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -408,6 +451,7 @@ export type MutationResolvers<ContextType = Context, ParentType extends Resolver
   createRegion?: Resolver<ResolversTypes['Region'], ParentType, ContextType, RequireFields<MutationCreateRegionArgs, 'input'>>;
   createSession?: Resolver<ResolversTypes['DroneSession'], ParentType, ContextType, RequireFields<MutationCreateSessionArgs, 'input'>>;
   endSession?: Resolver<ResolversTypes['DroneSession'], ParentType, ContextType, RequireFields<MutationEndSessionArgs, 'input'>>;
+  registerDrone?: Resolver<ResolversTypes['RegisterDronePayload'], ParentType, ContextType, RequireFields<MutationRegisterDroneArgs, 'input'>>;
   registerDroneIfNotExists?: Resolver<ResolversTypes['Drone'], ParentType, ContextType, RequireFields<MutationRegisterDroneIfNotExistsArgs, 'input'>>;
 };
 
@@ -438,6 +482,7 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   droneSession?: Resolver<ResolversTypes['DroneSession'], ParentType, ContextType, RequireFields<QueryDroneSessionArgs, 'id'>>;
   droneSessions?: Resolver<Array<ResolversTypes['DroneSession']>, ParentType, ContextType>;
   drones?: Resolver<Array<ResolversTypes['Drone']>, ParentType, ContextType>;
+  me?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
   operator?: Resolver<ResolversTypes['Operator'], ParentType, ContextType, RequireFields<QueryOperatorArgs, 'id'>>;
   operators?: Resolver<Array<ResolversTypes['Operator']>, ParentType, ContextType>;
   position?: Resolver<ResolversTypes['Position'], ParentType, ContextType, RequireFields<QueryPositionArgs, 'id'>>;
@@ -454,8 +499,22 @@ export type RegionResolvers<ContextType = Context, ParentType extends ResolversP
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type RegisterDronePayloadResolvers<ContextType = Context, ParentType extends ResolversParentTypes['RegisterDronePayload'] = ResolversParentTypes['RegisterDronePayload']> = {
+  deviceToken?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  drone?: Resolver<ResolversTypes['Drone'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type SubscriptionResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Subscription'] = ResolversParentTypes['Subscription']> = {
   droneUpdated?: SubscriptionResolver<ResolversTypes['Drone'], "droneUpdated", ParentType, ContextType>;
+};
+
+export type UserResolvers<ContextType = Context, ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']> = {
+  createdAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
+  email?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  role?: Resolver<ResolversTypes['UserRole'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type Resolvers<ContextType = Context> = {
@@ -468,6 +527,8 @@ export type Resolvers<ContextType = Context> = {
   Position?: PositionResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   Region?: RegionResolvers<ContextType>;
+  RegisterDronePayload?: RegisterDronePayloadResolvers<ContextType>;
   Subscription?: SubscriptionResolvers<ContextType>;
+  User?: UserResolvers<ContextType>;
 };
 

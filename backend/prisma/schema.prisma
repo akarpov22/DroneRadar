@@ -7,16 +7,31 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserRole {
+  ADMIN
+  PILOT
+  OBSERVER
+}
+
+model User {
+  id        String   @id @default(uuid())
+  auth0Sub  String   @unique
+  email     String?
+  role      UserRole @default(OBSERVER)
+  drones    Drone[]
+  createdAt DateTime @default(now())
+}
+
 model Drone {
-  id         String         @id @default(uuid())
-  name       String
-  serial     String        @unique
-  // model      DroneModel     @relation(fields: [modelId], references: [id])
-  modelId    String?
-  // operator   Operator       @relation(fields: [operatorId], references: [id])
-  operatorId String?
-  createdAt  DateTime       @default(now())
-  // sessions   DroneSession[]
+  id              String   @id @default(uuid())
+  name            String
+  serial          String   @unique
+  modelId         String?
+  operatorId      String?
+  pilotId         String?
+  pilot           User?    @relation(fields: [pilotId], references: [id])
+  deviceTokenHash String?
+  createdAt       DateTime @default(now())
 }
 
 model DroneSession {

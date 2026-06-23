@@ -17,7 +17,8 @@ const config: CodegenConfig = {
           DroneSession: '../prisma/client#DroneSession as PrismaDroneSession',
           Operator: '../prisma/client#Operator as PrismaOperator',
           Position: '../prisma/client#Position as PrismaPosition',
-          Region: '../prisma/client#Region as PrismaRegion'
+          Region: '../prisma/client#Region as PrismaRegion',
+          User: '../prisma/client#User as PrismaUser',
         },
         contextType: '../context#Context',
       },

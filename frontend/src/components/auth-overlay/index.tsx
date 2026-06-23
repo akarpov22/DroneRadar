@@ -69,7 +69,7 @@ type AuthOverlayProps = {
 };
 
 function AuthOverlayInner({ onLoginModalOpenChange }: AuthOverlayProps) {
-  const { isAuthenticated, isLoading, loginWithPopup, logout, user, error } = useAuth0();
+  const { isAuthenticated, isLoading, loginWithRedirect, logout, user, error } = useAuth0();
   const { isGuest } = useAuthSession();
   const { i18n, t } = useTranslation();
   const loginModal = useDisclosure();
@@ -120,8 +120,10 @@ function AuthOverlayInner({ onLoginModalOpenChange }: AuthOverlayProps) {
 
   const handleLogin = async () => {
     try {
-      await loginWithPopup(loginParams());
-      loginModal.onClose();
+      await loginWithRedirect({
+        ...loginParams(),
+        appState: { returnTo: window.location.pathname + window.location.search },
+      });
     } catch (err) {
       toast({
         title: t('auth-login-error'),

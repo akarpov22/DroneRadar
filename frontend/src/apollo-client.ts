@@ -1,12 +1,29 @@
-import { ApolloClient, InMemoryCache, HttpLink, split, from } from '@apollo/client';
+import { createContext } from 'react';
+import { ApolloClient, InMemoryCache, HttpLink, from } from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';
-import { WebSocketLink } from '@apollo/client/link/ws';
 import { SubscriptionClient } from 'subscriptions-transport-ws';
-import { getMainDefinition } from '@apollo/client/utilities';
 import { getGraphqlUrls } from './config/api';
 
+export const SubscriptionClientContext = createContext<SubscriptionClient | null>(null);
+
+function createSubscriptionClient(
+  getAccessToken?: () => Promise<string | null>,
+): SubscriptionClient {
+  const { wsUri } = getGraphqlUrls();
+  return new SubscriptionClient(wsUri, {
+    reconnect: true,
+    connectionParams: async () => {
+      if (!getAccessToken) return {};
+      const token = await getAccessToken();
+      return token ? { authToken: token } : {};
+    },
+  });
+}
+
 export function createApolloClient(getAccessToken?: () => Promise<string | null>) {
-  const { httpUri, wsUri } = getGraphqlUrls();
+  const { httpUri } = getGraphqlUrls();
+  const subscriptionClient = createSubscriptionClient(getAccessToken);
+
   const authLink = setContext(async (_, { headers }) => {
     if (!getAccessToken) return { headers };
     const token = await getAccessToken();
@@ -18,32 +35,14 @@ export function createApolloClient(getAccessToken?: () => Promise<string | null>
     };
   });
 
-  const httpLink = from([authLink, new HttpLink({ uri: httpUri })]);
-
-  const wsClient = new SubscriptionClient(wsUri, {
-    reconnect: true,
-    connectionParams: async () => {
-      if (!getAccessToken) return {};
-      const token = await getAccessToken();
-      return token ? { authToken: token } : {};
-    },
-  });
-
-  const wsLink = new WebSocketLink(wsClient);
-
-  const splitLink = split(
-    ({ query }) => {
-      const def = getMainDefinition(query);
-      return def.kind === 'OperationDefinition' && def.operation === 'subscription';
-    },
-    wsLink,
-    httpLink,
-  );
-
-  return new ApolloClient({
-    link: splitLink,
+  const client = new ApolloClient({
+    link: from([authLink, new HttpLink({ uri: httpUri })]),
     cache: new InMemoryCache(),
   });
+
+  return { client, subscriptionClient };
 }
 
-export const client = createApolloClient();
+const bundle = createApolloClient();
+export const client = bundle.client;
+export const subscriptionClient = bundle.subscriptionClient;

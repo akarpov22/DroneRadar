@@ -4,7 +4,8 @@ import { DroneSelectionProvider } from './components/drone-selection-provider';
 import { ApolloAuthProvider } from './components/apollo-auth-provider';
 import { isAuth0Disabled } from './auth/config';
 import { ApolloProvider } from '@apollo/client';
-import { client } from './apollo-client';
+import { client, subscriptionClient } from './apollo-client';
+import { SubscriptionClientContext } from './apollo-client';
 
 function AppShell() {
   return (
@@ -19,9 +20,11 @@ function AppShell() {
 function App() {
   if (isAuth0Disabled) {
     return (
-      <ApolloProvider client={client}>
-        <AppShell />
-      </ApolloProvider>
+      <SubscriptionClientContext.Provider value={subscriptionClient}>
+        <ApolloProvider client={client}>
+          <AppShell />
+        </ApolloProvider>
+      </SubscriptionClientContext.Provider>
     );
   }
 

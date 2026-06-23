@@ -45,35 +45,25 @@ export const DRONE_MODELS = gql`
   
 
 export const DRONE_UPDATED = gql`
-  subscription {
+  subscription DroneUpdated {
     droneUpdated {
       id
       name
       serial
-      model {
-        id
-        name
-        manufacturer
-        maxSpeed
-        maxRange
-      }
-
       sessions {
         id
         startedAt
         endedAt
-
         positions {
-            id
-            altitude
-            latitude
-            longitude
-            speed
-            heading
-            recordedAt
+          id
+          altitude
+          latitude
+          longitude
+          speed
+          heading
+          recordedAt
         }
-    }
-      createdAt
+      }
     }
   }
 `;
@@ -84,3 +74,31 @@ mutation AssignModel($input: AssignModelInput!) {
     id
   }
 }`;
+
+export const FLIGHT_RESTRICTION_ZONES = gql`
+  query FlightRestrictionZones(
+    $west: Float!
+    $south: Float!
+    $east: Float!
+    $north: Float!
+    $includeNotam: Boolean
+  ) {
+    flightRestrictionZones(
+      west: $west
+      south: $south
+      east: $east
+      north: $north
+      includeNotam: $includeNotam
+    ) {
+      id
+      layerType
+      name
+      description
+      lowerLimit
+      upperLimit
+      validFrom
+      validTo
+      geometry
+    }
+  }
+`;

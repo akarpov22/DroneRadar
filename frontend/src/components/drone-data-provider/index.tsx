@@ -1,30 +1,49 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useQuery, useSubscription } from '@apollo/client';
+import React, { createContext, useContext, useState, useEffect, useRef, useMemo } from 'react';
+import { useQuery } from '@apollo/client';
+import { print } from 'graphql';
 import { DRONES, DRONE_MODELS, DRONE_UPDATED } from '../../utils/graphql-queries';
 import { mergeDroneUpdate } from '../../utils/drone';
+import { setDroneSnapshot } from '../../utils/drone-store';
+import { SubscriptionClientContext } from '../../apollo-client';
 import { Drone, Model } from '../../utils/types';
 
-const DroneContext = createContext<{ drones: Drone[], models: Model[]}>({ drones: [], models: []});
+const DroneContext = createContext<{ models: Model[] }>({ models: [] });
 
 export const DroneDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { data: initialDrones } = useQuery<{ drones: Drone[] }>(DRONES);
-  const { data } = useSubscription<{ droneUpdated: Drone }>(DRONE_UPDATED);
-  const { data: droneModels } = useQuery<{ droneModels: Model[] }>(DRONE_MODELS);
-
-  const [drones, setDrones] = useState<Drone[]>([]);
+  const wsClient = useContext(SubscriptionClientContext);
+  const dronesRef = useRef<Drone[]>([]);
   const [models, setModels] = useState<Model[]>([]);
 
-  useEffect(() => {
-    if (initialDrones?.drones) {
-      setDrones(initialDrones.drones);
-    }
-  }, [initialDrones]);
+  useQuery<{ drones: Drone[] }>(DRONES, {
+    onCompleted: (data) => {
+      dronesRef.current = data.drones;
+      setDroneSnapshot(dronesRef.current);
+    },
+  });
 
   useEffect(() => {
-    if (data?.droneUpdated) {
-      setDrones((prev) => mergeDroneUpdate(prev, data.droneUpdated));
-    }
-  }, [data]);
+    if (!wsClient) return;
+
+    const subscription = wsClient.request({ query: print(DRONE_UPDATED) }).subscribe({
+      next: (result: { data?: { droneUpdated?: Drone } }) => {
+        const incoming = result.data?.droneUpdated;
+        if (!incoming) return;
+
+        const next = mergeDroneUpdate(dronesRef.current, incoming);
+        if (next === dronesRef.current) return;
+
+        dronesRef.current = next;
+        setDroneSnapshot(dronesRef.current);
+      },
+      error: (error: unknown) => {
+        console.error('Drone subscription error:', error);
+      },
+    });
+
+    return () => subscription.unsubscribe();
+  }, [wsClient]);
+
+  const { data: droneModels } = useQuery<{ droneModels: Model[] }>(DRONE_MODELS);
 
   useEffect(() => {
     if (droneModels?.droneModels) {
@@ -32,8 +51,10 @@ export const DroneDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   }, [droneModels]);
 
+  const contextValue = useMemo(() => ({ models }), [models]);
+
   return (
-    <DroneContext.Provider value={{ drones, models }}>
+    <DroneContext.Provider value={contextValue}>
       {children}
     </DroneContext.Provider>
   );

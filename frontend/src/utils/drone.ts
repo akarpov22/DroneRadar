@@ -1,5 +1,7 @@
 import { Drone, Position, Session } from './types';
 
+const MAX_STORED_POSITIONS = 500;
+
 export function getCurrentSession(sessions: Session[]): Session | undefined {
   const active = sessions.filter((session) => !session.endedAt);
   const pool = active.length > 0 ? active : sessions;
@@ -21,31 +23,55 @@ export function getDroneLatestPosition(drone: Drone): Position | undefined {
   return getLatestPosition(getCurrentSession(drone.sessions)?.positions ?? []);
 }
 
-export function getLatestRecordedAt(drone: Drone): number {
-  let latest = 0;
-
-  for (const session of drone.sessions) {
-    for (const position of session.positions) {
-      const recordedAt = new Date(position.recordedAt).getTime();
-      if (recordedAt > latest) {
-        latest = recordedAt;
-      }
-    }
-  }
-
-  return latest;
-}
-
 export function mergeDroneUpdate(prev: Drone[], incoming: Drone): Drone[] {
-  const existing = prev.find((drone) => drone.id === incoming.id);
-
-  if (!existing) {
-    return prev.concat(incoming);
+  const index = prev.findIndex((drone) => drone.id === incoming.id);
+  if (index === -1) {
+    return [...prev, incoming];
   }
 
-  if (getLatestRecordedAt(incoming) < getLatestRecordedAt(existing)) {
+  const existing = prev[index];
+  const incomingSession = getCurrentSession(incoming.sessions);
+  const newPosition = incomingSession
+    ? getLatestPosition(incomingSession.positions)
+    : undefined;
+  if (!incomingSession || !newPosition) {
     return prev;
   }
 
-  return prev.filter((drone) => drone.id !== incoming.id).concat(incoming);
+  const existingLatest = getDroneLatestPosition(existing);
+  if (
+    existingLatest &&
+    new Date(newPosition.recordedAt) <= new Date(existingLatest.recordedAt)
+  ) {
+    return prev;
+  }
+
+  const sessionIndex = existing.sessions.findIndex((session) => session.id === incomingSession.id);
+  let sessions: Session[];
+
+  if (sessionIndex === -1) {
+    sessions = [...existing.sessions, incomingSession];
+  } else {
+    const session = existing.sessions[sessionIndex];
+    if (session.positions.some((position) => position.id === newPosition.id)) {
+      return prev;
+    }
+
+    let positions = [...session.positions, newPosition];
+    if (positions.length > MAX_STORED_POSITIONS) {
+      positions = positions.slice(-MAX_STORED_POSITIONS);
+    }
+
+    sessions = [...existing.sessions];
+    sessions[sessionIndex] = { ...session, positions };
+  }
+
+  const next = [...prev];
+  next[index] = {
+    ...existing,
+    name: incoming.name,
+    serial: incoming.serial,
+    sessions,
+  };
+  return next;
 }

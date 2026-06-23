@@ -1,0 +1,30 @@
+import { ApolloProvider } from '@apollo/client';
+import { useAuth0 } from '@auth0/auth0-react';
+import { useMemo } from 'react';
+import { createApolloClient } from '../../apollo-client';
+import { isAuth0Disabled } from '../../auth/config';
+import { client as devClient } from '../../apollo-client';
+
+export const ApolloAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { getAccessTokenSilently, isAuthenticated } = useAuth0();
+
+  const client = useMemo(() => {
+    if (isAuth0Disabled) return devClient;
+
+    return createApolloClient(async () => {
+      if (!isAuthenticated) return null;
+      try {
+        return await getAccessTokenSilently({
+          authorizationParams: {
+            audience: import.meta.env.VITE_AUTH0_AUDIENCE,
+          },
+        });
+      } catch (err) {
+        console.error('Auth0 getAccessTokenSilently failed:', err);
+        return null;
+      }
+    });
+  }, [getAccessTokenSilently, isAuthenticated]);
+
+  return <ApolloProvider client={client}>{children}</ApolloProvider>;
+};

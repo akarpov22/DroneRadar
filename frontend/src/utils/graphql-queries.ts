@@ -1,4 +1,36 @@
-import { gql } from "@apollo/client";
+import { gql } from '@apollo/client';
+
+export const DRONES = gql`
+  query Drones {
+    drones {
+      id
+      name
+      serial
+      model {
+        id
+        name
+        manufacturer
+        maxSpeed
+        maxRange
+      }
+      sessions {
+        id
+        startedAt
+        endedAt
+        positions {
+          id
+          altitude
+          latitude
+          longitude
+          speed
+          heading
+          recordedAt
+        }
+      }
+      createdAt
+    }
+  }
+`;
 
 export const DRONE_MODELS = gql`
   query DroneModels {

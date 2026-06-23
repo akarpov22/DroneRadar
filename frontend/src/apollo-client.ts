@@ -3,19 +3,10 @@ import { setContext } from '@apollo/client/link/context';
 import { WebSocketLink } from '@apollo/client/link/ws';
 import { SubscriptionClient } from 'subscriptions-transport-ws';
 import { getMainDefinition } from '@apollo/client/utilities';
-
-const httpUri = import.meta.env.VITE_GRAPHQL_HTTP;
-const wsUri = import.meta.env.VITE_GRAPHQL_WS;
-
-if (!httpUri) {
-  throw new Error('Missing required environment variable: VITE_GRAPHQL_HTTP');
-}
-
-if (!wsUri) {
-  throw new Error('Missing required environment variable: VITE_GRAPHQL_WS');
-}
+import { getGraphqlUrls } from './config/api';
 
 export function createApolloClient(getAccessToken?: () => Promise<string | null>) {
+  const { httpUri, wsUri } = getGraphqlUrls();
   const authLink = setContext(async (_, { headers }) => {
     if (!getAccessToken) return { headers };
     const token = await getAccessToken();

@@ -20,21 +20,14 @@ export function createApolloClient(getAccessToken?: () => Promise<string | null>
 
   const httpLink = from([authLink, new HttpLink({ uri: httpUri })]);
 
-  const wsClient = new SubscriptionClient(
-    wsUri,
-    {
-      reconnect: true,
-      connectionParams: async () => {
-        if (!getAccessToken) return {};
-        const token = await getAccessToken();
-        return token ? { authToken: token } : {};
-      },
+  const wsClient = new SubscriptionClient(wsUri, {
+    reconnect: true,
+    connectionParams: async () => {
+      if (!getAccessToken) return {};
+      const token = await getAccessToken();
+      return token ? { authToken: token } : {};
     },
-  );
-
-  wsClient.onConnected(() => console.log('[WS] connected', wsUri));
-  wsClient.onDisconnected(() => console.warn('[WS] disconnected'));
-  wsClient.onError((error) => console.error('[WS] error', error));
+  });
 
   const wsLink = new WebSocketLink(wsClient);
 

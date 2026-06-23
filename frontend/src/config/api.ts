@@ -28,20 +28,11 @@ export function getGraphqlUrls(): { httpUri: string; wsUri: string } {
   }
 
   const useSecure =
-    import.meta.env.PROD ||
-    (typeof window !== 'undefined' && window.location.protocol === 'https:');
+    (typeof window !== 'undefined' && window.location.protocol === 'https:') ||
+    /^https:\/\//i.test(rawHttp);
 
   const httpUri = useSecure ? toHttps(rawHttp) : rawHttp;
   const wsUri = useSecure ? toWss(rawWs) : rawWs;
-
-  if (import.meta.env.PROD) {
-    if (!httpUri.startsWith('https://')) {
-      throw new Error('Production GraphQL HTTP URL must use HTTPS');
-    }
-    if (!wsUri.startsWith('wss://')) {
-      throw new Error('Production GraphQL WebSocket URL must use WSS');
-    }
-  }
 
   return { httpUri, wsUri };
 }

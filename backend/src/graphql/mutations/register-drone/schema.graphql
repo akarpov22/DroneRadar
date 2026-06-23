@@ -1,0 +1,14 @@
+type Mutation {
+  registerDrone(input: RegisterDroneInput!): RegisterDronePayload!
+}
+
+input RegisterDroneInput {
+  serial: String!
+  name: String!
+  regionCode: String!
+}
+
+type RegisterDronePayload {
+  drone: Drone!
+  deviceToken: String!
+}

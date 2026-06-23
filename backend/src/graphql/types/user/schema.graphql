@@ -1,0 +1,12 @@
+enum UserRole {
+  ADMIN
+  PILOT
+  OBSERVER
+}
+
+type User {
+  id: ID!
+  email: String
+  role: UserRole!
+  createdAt: DateTime!
+}

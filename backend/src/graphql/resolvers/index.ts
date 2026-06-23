@@ -1,3 +1,4 @@
+import { userResolvers } from "../types/user";
 import { dateTimeScalar } from "../scalars/date-time";
 import { droneResolvers } from "../types/drone";
 import { droneModelResolvers } from "../types/drone-model";
@@ -18,6 +19,7 @@ export const resolvers = {
     Operator: operatorResolvers,
     Position: positionResolvers,
     Region: regionResolvers,
+    User: userResolvers,
     Subscription: subscriptionResolvers,
     ...dateTimeScalar
 }

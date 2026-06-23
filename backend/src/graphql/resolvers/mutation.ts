@@ -1,5 +1,6 @@
 import { MutationResolvers } from "../../generated/schema";
 import { registerDroneIfNotExists } from '../mutations/register-drone-If-not-exists'
+import { registerDrone } from '../mutations/register-drone'
 import { appendPosition } from '../mutations/append-position'
 import { assignOperator } from "../mutations/assign-operator";
 import { assignModel } from "../mutations/assign-model";
@@ -10,6 +11,7 @@ import { createRegion } from "../mutations/create-region";
 import { createDroneModel } from "../mutations/create-drone-model";
 
 export const mutationResolvers: MutationResolvers = {
+    registerDrone,
     registerDroneIfNotExists,
     appendPosition,
     assignOperator,

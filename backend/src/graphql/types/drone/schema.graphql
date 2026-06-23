@@ -4,6 +4,7 @@ type Drone {
   serial: String
   model: DroneModel
   operator: Operator
+  pilot: User
   createdAt: DateTime!
   sessions: [DroneSession!]!
 }

@@ -1,7 +1,16 @@
-import { Drone, QueryResolvers } from "../../../generated/schema";
+import { UserRole } from '@prisma/client';
+import { QueryResolvers } from "../../../generated/schema";
+import { requireAuth } from "../../../auth/guards";
 
 export const queryResolvers: QueryResolvers = {
-    drones: (_, __, { prisma }) => prisma.drone.findMany(),
+    me: (_, __, ctx) => requireAuth(ctx),
+    drones: (_, __, { prisma, user }) => {
+        if (!user) return prisma.drone.findMany();
+        if (user.role === UserRole.ADMIN || user.role === UserRole.OBSERVER) {
+            return prisma.drone.findMany();
+        }
+        return prisma.drone.findMany({ where: { pilotId: user.id } });
+    },
     drone: async (_, { id }, { prisma }) => {
         const drone = await prisma.drone.findUnique({ where: { id } });
         if (!drone) throw new Error('Drone not found');

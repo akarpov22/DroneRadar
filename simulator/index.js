@@ -20,12 +20,12 @@ const speedMultiplier = Number(process.env.SIMULATION_SPEED_MULTIPLIER ?? 1);
 const targetSpeedKmh = Number(process.env.SIMULATION_SPEED_KMH ?? 20);
 
 const route = [
-  { latitude: 30.5200, longitude: 50.4500, altitude: 105 },
-  { latitude: 30.5232, longitude: 50.4526, altitude: 118 },
-  { latitude: 30.5268, longitude: 50.4564, altitude: 130 },
-  { latitude: 30.5249, longitude: 50.4610, altitude: 122 },
-  { latitude: 30.5215, longitude: 50.4592, altitude: 112 },
-  { latitude: 30.5194, longitude: 50.4541, altitude: 108 }
+  { latitude: 59.3293, longitude: 18.0686, altitude: 105 },
+  { latitude: 59.3319, longitude: 18.0718, altitude: 118 },
+  { latitude: 59.3357, longitude: 18.0754, altitude: 130 },
+  { latitude: 59.3403, longitude: 18.0735, altitude: 122 },
+  { latitude: 59.3385, longitude: 18.0701, altitude: 112 },
+  { latitude: 59.3334, longitude: 18.0680, altitude: 108 }
 ];
 
 const REGISTER_DRONE = gql`

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useQuery, useSubscription } from '@apollo/client';
 import { DRONES, DRONE_MODELS, DRONE_UPDATED } from '../../utils/graphql-queries';
+import { mergeDroneUpdate } from '../../utils/drone';
 import { Drone, Model } from '../../utils/types';
 
 const DroneContext = createContext<{ drones: Drone[], models: Model[]}>({ drones: [], models: []});
@@ -21,9 +22,7 @@ export const DroneDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   useEffect(() => {
     if (data?.droneUpdated) {
-      setDrones((prev) =>
-        prev.filter((drone) => drone.id !== data.droneUpdated.id).concat(data.droneUpdated)
-      );
+      setDrones((prev) => mergeDroneUpdate(prev, data.droneUpdated));
     }
   }, [data]);
 

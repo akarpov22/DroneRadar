@@ -8,6 +8,10 @@ export const droneResolvers: DroneResolvers = {
     operator: (parent, _, {prisma}) =>  parent.operatorId ? prisma.operator.findUnique({where:{id: parent.operatorId}}) : null,
     pilot: (parent, _, { prisma }) =>
         parent.pilotId ? prisma.user.findUnique({ where: { id: parent.pilotId } }) : null,
-    sessions: (parent, _, { prisma }) => prisma.droneSession.findMany({ where: { droneId: parent.id } }),
+    sessions: (parent, _, { prisma }) =>
+      prisma.droneSession.findMany({
+        where: { droneId: parent.id },
+        orderBy: { startedAt: 'asc' },
+      }),
     createdAt: (parent) => parent.createdAt,
 }

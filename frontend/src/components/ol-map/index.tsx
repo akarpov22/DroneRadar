@@ -12,7 +12,7 @@ import Icon from 'ol/style/Icon';
 import VectorSource from 'ol/source/Vector';
 import VectorLayer from 'ol/layer/Vector';
 import { fromLonLat } from 'ol/proj';
-import { getLast } from '../../utils/array';
+import { getCurrentSession, getDroneLatestPosition } from '../../utils/drone';
 import Stroke from 'ol/style/Stroke';
 import { useDroneSelection } from '../drone-selection-provider';
 
@@ -33,7 +33,7 @@ export const OlMap: React.FC = () => {
   const mapRef = useRef<HTMLDivElement>(null);
 
   const droneFeatures = drones.map(drone => {
-    const currentPosition = getLast(getLast(drone.sessions)?.positions ?? [])
+    const currentPosition = getDroneLatestPosition(drone)
     const coords = fromLonLat([currentPosition?.longitude ?? 0, currentPosition?.latitude ?? 0]);
 
     const droneFeature = new Feature({
@@ -65,7 +65,7 @@ export const OlMap: React.FC = () => {
   })
 
   const dronePathFeatures = drones.map(drone => {
-    const currentSession = getLast(drone.sessions)
+    const currentSession = getCurrentSession(drone.sessions)
 
     const path = currentSession?.positions.map(position => fromLonLat([position.longitude, position.latitude]))
 

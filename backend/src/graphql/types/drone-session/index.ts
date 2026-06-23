@@ -9,5 +9,8 @@ export const droneSessionResolvers = {
     startedAt: (parent) => parent.startedAt,
     endedAt: (parent) => parent.endedAt,
     positions: async (parent, _, { prisma }) =>
-      prisma.position.findMany({ where: { sessionId: parent.id } }),
+      prisma.position.findMany({
+        where: { sessionId: parent.id },
+        orderBy: { recordedAt: 'asc' },
+      }),
 } as DroneSessionResolvers;

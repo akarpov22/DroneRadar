@@ -9,7 +9,6 @@ services:
       POSTGRES_DB: dronetracker
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      - ./initdb:/docker-entrypoint-initdb.d
     ports:
       - "5439:5432"
     healthcheck:
@@ -25,6 +24,9 @@ services:
     restart: unless-stopped
     environment:
       DATABASE_URL: postgresql://devuser:devpass@postgres:5432/dronetracker?schema=public
+      AUTH0_DISABLED: ${AUTH0_DISABLED:-true}
+      AUTH0_DOMAIN: ${AUTH0_DOMAIN:-}
+      AUTH0_AUDIENCE: ${AUTH0_AUDIENCE:-}
     ports:
       - "4000:4000"
     depends_on:
@@ -37,6 +39,10 @@ services:
       args:
         VITE_GRAPHQL_HTTP: http://localhost:4000/graphql
         VITE_GRAPHQL_WS: ws://localhost:4000/graphql
+        VITE_AUTH0_DISABLED: ${VITE_AUTH0_DISABLED:-true}
+        VITE_AUTH0_DOMAIN: ${VITE_AUTH0_DOMAIN:-}
+        VITE_AUTH0_CLIENT_ID: ${VITE_AUTH0_CLIENT_ID:-}
+        VITE_AUTH0_AUDIENCE: ${VITE_AUTH0_AUDIENCE:-}
     container_name: drone-tracker-frontend
     restart: unless-stopped
     ports:
@@ -51,8 +57,8 @@ services:
     restart: unless-stopped
     environment:
       GRAPHQL_URL: http://backend:4000/graphql
-      DRONE_SERIAL: 7777MYDRONE7
-      REGION_ID: UA-KY
+      DRONE_SERIAL: ${DRONE_SERIAL:-7777MYDRONE7}
+      REGION_ID: ${REGION_ID:-UA-KY}
     depends_on:
       - backend
 

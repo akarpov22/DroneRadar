@@ -217,23 +217,26 @@ export const OlMap: React.FC = () => {
     const ownedSerials = getOwnedSerials();
     dronePathSource.clear();
 
+    if (!selectedDrone) return;
+
+    const drone = getDroneSnapshot().find((d) => d.id === selectedDrone.id);
     if (
-      !selectedDrone ||
-      (isDisplayOwned && selectedDrone.serial && !ownedSerials.includes(selectedDrone.serial))
+      !drone ||
+      (isDisplayOwned && drone.serial && !ownedSerials.includes(drone.serial))
     ) {
       return;
     }
 
-    const session = getCurrentSession(selectedDrone.sessions);
+    const session = getCurrentSession(drone.sessions);
     const path = session?.positions.map((p) => fromLonLat([p.longitude, p.latitude])) ?? [];
     if (path.length === 0) return;
 
     const lineFeature = new Feature({ geometry: new LineString(path) });
-    lineFeature.set('droneId', selectedDrone.id);
-    lineFeature.set('droneSerial', selectedDrone.serial);
+    lineFeature.set('droneId', drone.id);
+    lineFeature.set('droneSerial', drone.serial);
     lineFeature.setStyle(new Style({ stroke: new Stroke({ color: 'red', width: 3 }) }));
     dronePathSource.addFeature(lineFeature);
-  }, [dronePathSource, isDisplayOwned, selectedDrone]);
+  }, [dronePathSource, isDisplayOwned, selectedDrone?.id]);
 
   useEffect(() => {
     const sync = () => {

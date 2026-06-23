@@ -1,10 +1,34 @@
 import { PrismaClient } from '@prisma/client';
-import { PubSub } from 'graphql-subscriptions';
 import { pubsub } from '../context';
+
+const SUBSCRIPTION_POSITION_LIMIT = 1;
 
 export async function publishDroneUpdated(prisma: PrismaClient, droneId: string) {
   const drone = await prisma.drone.findUnique({ where: { id: droneId } });
   if (!drone) return;
 
-  await pubsub.publish('DRONE_UPDATED', { droneUpdated: drone });
+  const activeSession = await prisma.droneSession.findFirst({
+    where: { droneId, endedAt: null },
+    orderBy: { startedAt: 'desc' },
+  });
+
+  const sessions = activeSession
+    ? [
+        {
+          ...activeSession,
+          positions: await prisma.position.findMany({
+            where: { sessionId: activeSession.id },
+            orderBy: { recordedAt: 'desc' },
+            take: SUBSCRIPTION_POSITION_LIMIT,
+          }),
+        },
+      ]
+    : [];
+
+  await pubsub.publish('DRONE_UPDATED', {
+    droneUpdated: {
+      ...drone,
+      sessions,
+    },
+  });
 }

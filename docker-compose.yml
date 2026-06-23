@@ -27,6 +27,8 @@ services:
       AUTH0_DISABLED: ${AUTH0_DISABLED:-true}
       AUTH0_DOMAIN: ${AUTH0_DOMAIN:-}
       AUTH0_AUDIENCE: ${AUTH0_AUDIENCE:-}
+      FLIGHT_ZONE_SYNC_INTERVAL_MS: ${FLIGHT_ZONE_SYNC_INTERVAL_MS:-21600000}
+      FLIGHT_ZONE_SYNC_ON_START: ${FLIGHT_ZONE_SYNC_ON_START:-true}
     ports:
       - "4000:4000"
     depends_on:
@@ -58,7 +60,7 @@ services:
     environment:
       GRAPHQL_URL: http://backend:4000/graphql
       DRONE_SERIAL: ${DRONE_SERIAL:-7777MYDRONE7}
-      REGION_ID: ${REGION_ID:-UA-KY}
+      REGION_ID: ${REGION_ID:-SE-STO}
     depends_on:
       - backend
 

@@ -81,3 +81,25 @@ model Region {
   regionCode String   @unique
   // sessions   DroneSession[]
 }
+
+model FlightRestrictionZone {
+  externalId  String   @id
+  sourceLayer String
+  layerType   String
+  name        String?
+  description String?
+  lowerLimit  String?
+  upperLimit  String?
+  validFrom   String?
+  validTo     String?
+  geometry    Json
+  west        Float
+  south       Float
+  east        Float
+  north       Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([layerType])
+  @@index([west, east, south, north])
+}

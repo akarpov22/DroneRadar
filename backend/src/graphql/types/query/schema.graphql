@@ -12,4 +12,11 @@ type Query {
   position(id: ID!): Position!
   regions: [Region!]!
   region(id: ID!): Region!
+  flightRestrictionZones(
+    west: Float!
+    south: Float!
+    east: Float!
+    north: Float!
+    includeNotam: Boolean
+  ): [FlightRestrictionZone!]!
 }

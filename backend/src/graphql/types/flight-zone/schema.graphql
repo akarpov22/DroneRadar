@@ -1,0 +1,11 @@
+type FlightRestrictionZone {
+  id: ID!
+  layerType: String!
+  name: String
+  description: String
+  lowerLimit: String
+  upperLimit: String
+  validFrom: String
+  validTo: String
+  geometry: JSONObject!
+}

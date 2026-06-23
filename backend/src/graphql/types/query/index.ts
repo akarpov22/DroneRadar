@@ -1,6 +1,7 @@
 import { UserRole } from '@prisma/client';
 import { QueryResolvers } from "../../../generated/schema";
 import { requireAuth } from "../../../auth/guards";
+import { getFlightZonesByBbox } from "../../../services/flight-zones-db";
 
 export const queryResolvers: QueryResolvers = {
     me: (_, __, ctx) => requireAuth(ctx),
@@ -55,6 +56,9 @@ export const queryResolvers: QueryResolvers = {
         });
         if (!region) throw new Error('Region not found');
         return region;
+    },
+    flightRestrictionZones: async (_, { west, south, east, north, includeNotam }) => {
+        return getFlightZonesByBbox([west, south, east, north], includeNotam ?? false);
     },
 }
 

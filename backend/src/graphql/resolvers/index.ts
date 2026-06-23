@@ -1,5 +1,6 @@
 import { userResolvers } from "../types/user";
 import { dateTimeScalar } from "../scalars/date-time";
+import { jsonObjectScalar } from "../scalars/json-object";
 import { droneResolvers } from "../types/drone";
 import { droneModelResolvers } from "../types/drone-model";
 import { droneSessionResolvers } from "../types/drone-session";
@@ -21,5 +22,6 @@ export const resolvers = {
     Region: regionResolvers,
     User: userResolvers,
     Subscription: subscriptionResolvers,
-    ...dateTimeScalar
+    ...dateTimeScalar,
+    ...jsonObjectScalar,
 }

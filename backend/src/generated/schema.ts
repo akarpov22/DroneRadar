@@ -18,6 +18,7 @@ export type Scalars = {
   Int: { input: number; output: number; }
   Float: { input: number; output: number; }
   DateTime: { input: any; output: any; }
+  JSONObject: { input: any; output: any; }
 };
 
 export type AppendPositionInput = {
@@ -96,6 +97,19 @@ export type DroneSession = {
 
 export type EndSessionInput = {
   droneId: Scalars['String']['input'];
+};
+
+export type FlightRestrictionZone = {
+  __typename?: 'FlightRestrictionZone';
+  description?: Maybe<Scalars['String']['output']>;
+  geometry: Scalars['JSONObject']['output'];
+  id: Scalars['ID']['output'];
+  layerType: Scalars['String']['output'];
+  lowerLimit?: Maybe<Scalars['String']['output']>;
+  name?: Maybe<Scalars['String']['output']>;
+  upperLimit?: Maybe<Scalars['String']['output']>;
+  validFrom?: Maybe<Scalars['String']['output']>;
+  validTo?: Maybe<Scalars['String']['output']>;
 };
 
 export type Mutation = {
@@ -190,6 +204,7 @@ export type Query = {
   droneSession: DroneSession;
   droneSessions: Array<DroneSession>;
   drones: Array<Drone>;
+  flightRestrictionZones: Array<FlightRestrictionZone>;
   me?: Maybe<User>;
   operator: Operator;
   operators: Array<Operator>;
@@ -212,6 +227,15 @@ export type QueryDroneModelArgs = {
 
 export type QueryDroneSessionArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type QueryFlightRestrictionZonesArgs = {
+  east: Scalars['Float']['input'];
+  includeNotam?: InputMaybe<Scalars['Boolean']['input']>;
+  north: Scalars['Float']['input'];
+  south: Scalars['Float']['input'];
+  west: Scalars['Float']['input'];
 };
 
 
@@ -360,8 +384,10 @@ export type ResolversTypes = {
   DroneModel: ResolverTypeWrapper<PrismaDroneModel>;
   DroneSession: ResolverTypeWrapper<PrismaDroneSession>;
   EndSessionInput: EndSessionInput;
+  FlightRestrictionZone: ResolverTypeWrapper<FlightRestrictionZone>;
   Float: ResolverTypeWrapper<Scalars['Float']['output']>;
   ID: ResolverTypeWrapper<Scalars['ID']['output']>;
+  JSONObject: ResolverTypeWrapper<Scalars['JSONObject']['output']>;
   Mutation: ResolverTypeWrapper<{}>;
   Operator: ResolverTypeWrapper<PrismaOperator>;
   Position: ResolverTypeWrapper<PrismaPosition>;
@@ -391,8 +417,10 @@ export type ResolversParentTypes = {
   DroneModel: PrismaDroneModel;
   DroneSession: PrismaDroneSession;
   EndSessionInput: EndSessionInput;
+  FlightRestrictionZone: FlightRestrictionZone;
   Float: Scalars['Float']['output'];
   ID: Scalars['ID']['output'];
+  JSONObject: Scalars['JSONObject']['output'];
   Mutation: {};
   Operator: PrismaOperator;
   Position: PrismaPosition;
@@ -442,6 +470,23 @@ export type DroneSessionResolvers<ContextType = Context, ParentType extends Reso
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type FlightRestrictionZoneResolvers<ContextType = Context, ParentType extends ResolversParentTypes['FlightRestrictionZone'] = ResolversParentTypes['FlightRestrictionZone']> = {
+  description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  geometry?: Resolver<ResolversTypes['JSONObject'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  layerType?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  lowerLimit?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  upperLimit?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  validFrom?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  validTo?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export interface JsonObjectScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['JSONObject'], any> {
+  name: 'JSONObject';
+}
+
 export type MutationResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
   appendPosition?: Resolver<ResolversTypes['Position'], ParentType, ContextType, RequireFields<MutationAppendPositionArgs, 'input'>>;
   assignModel?: Resolver<ResolversTypes['Drone'], ParentType, ContextType, RequireFields<MutationAssignModelArgs, 'input'>>;
@@ -482,6 +527,7 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   droneSession?: Resolver<ResolversTypes['DroneSession'], ParentType, ContextType, RequireFields<QueryDroneSessionArgs, 'id'>>;
   droneSessions?: Resolver<Array<ResolversTypes['DroneSession']>, ParentType, ContextType>;
   drones?: Resolver<Array<ResolversTypes['Drone']>, ParentType, ContextType>;
+  flightRestrictionZones?: Resolver<Array<ResolversTypes['FlightRestrictionZone']>, ParentType, ContextType, RequireFields<QueryFlightRestrictionZonesArgs, 'east' | 'north' | 'south' | 'west'>>;
   me?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
   operator?: Resolver<ResolversTypes['Operator'], ParentType, ContextType, RequireFields<QueryOperatorArgs, 'id'>>;
   operators?: Resolver<Array<ResolversTypes['Operator']>, ParentType, ContextType>;
@@ -522,6 +568,8 @@ export type Resolvers<ContextType = Context> = {
   Drone?: DroneResolvers<ContextType>;
   DroneModel?: DroneModelResolvers<ContextType>;
   DroneSession?: DroneSessionResolvers<ContextType>;
+  FlightRestrictionZone?: FlightRestrictionZoneResolvers<ContextType>;
+  JSONObject?: GraphQLScalarType;
   Mutation?: MutationResolvers<ContextType>;
   Operator?: OperatorResolvers<ContextType>;
   Position?: PositionResolvers<ContextType>;

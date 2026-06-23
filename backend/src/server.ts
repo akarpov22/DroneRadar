@@ -9,6 +9,7 @@ import { schema } from './schema';
 import { buildContext } from './build-context';
 import { startPgListener } from './db/pg-listener';
 import { getCorsOrigin } from './config/cors';
+import { startFlightZoneSyncScheduler } from './services/flight-zones-db';
 
 async function startServer() {
   const app = express();
@@ -49,6 +50,7 @@ async function startServer() {
   );
 
   startPgListener();
+  startFlightZoneSyncScheduler();
 
   if (process.env.AUTH0_DISABLED !== 'true') {
     console.log(`Auth0 domain: ${process.env.AUTH0_DOMAIN}`);

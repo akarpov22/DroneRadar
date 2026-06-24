@@ -19,7 +19,8 @@ if [ ! -f "$CERT_DIR/ca.crt" ]; then
     -out "$CERT_DIR/server.crt" -days 3650
   rm -f "$CERT_DIR/server.csr" "$CERT_DIR/ca.srl"
   echo "CA certificate (set as MQTT_CA_PEM on Render, base64):"
-  base64 "$CERT_DIR/ca.crt"
+  base64 -w 0 "$CERT_DIR/ca.crt" 2>/dev/null || base64 "$CERT_DIR/ca.crt" | tr -d '\n'
+  echo ""
 fi
 
 if [ -z "$MQTT_BACKEND_USER" ] || [ -z "$MQTT_BACKEND_PASSWORD" ]; then
@@ -27,12 +28,25 @@ if [ -z "$MQTT_BACKEND_USER" ] || [ -z "$MQTT_BACKEND_PASSWORD" ]; then
   exit 1
 fi
 
-mosquitto_passwd -b -c "$CONFIG_DIR/passwd" "$MQTT_BACKEND_USER" "$MQTT_BACKEND_PASSWORD"
+MQTT_DRONE_USER="${MQTT_DRONE_USER:-drone-simulator}"
+MQTT_DRONE_PASSWORD="${MQTT_DRONE_PASSWORD:-$MQTT_BACKEND_PASSWORD}"
 
-printf 'user %s\ntopic read droneradar/telemetry/#\n' "$MQTT_BACKEND_USER" > "$CONFIG_DIR/acl"
+mosquitto_passwd -b -c "$CONFIG_DIR/passwd" "$MQTT_BACKEND_USER" "$MQTT_BACKEND_PASSWORD"
+mosquitto_passwd -b "$CONFIG_DIR/passwd" "$MQTT_DRONE_USER" "$MQTT_DRONE_PASSWORD"
+
+cat > "$CONFIG_DIR/acl" <<EOF
+# Anonymous drones on :1883
+topic write droneradar/telemetry/#
+
+user ${MQTT_BACKEND_USER}
+topic read droneradar/telemetry/#
+
+user ${MQTT_DRONE_USER}
+topic write droneradar/telemetry/#
+EOF
 
 chown mosquitto:mosquitto "$CONFIG_DIR/passwd" "$CONFIG_DIR/acl"
-chmod 644 "$CONFIG_DIR/passwd" "$CONFIG_DIR/acl"
+chmod 600 "$CONFIG_DIR/passwd" "$CONFIG_DIR/acl"
 
 chown -R mosquitto:mosquitto /mosquitto/persist/data "$CERT_DIR"
 chmod 600 "$CERT_DIR/server.key" 2>/dev/null || true

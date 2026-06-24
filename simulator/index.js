@@ -9,6 +9,10 @@ if (!mqttBrokerUrl) {
   throw new Error('Missing required environment variable: MQTT_BROKER_URL');
 }
 
+if (mqttBrokerUrl.startsWith('mqtts://') || mqttBrokerUrl.startsWith('ssl://')) {
+  throw new Error('Simulator uses plain mqtt:// on :1883 only — drones do not authenticate');
+}
+
 if (!serial) {
   throw new Error('Missing required environment variable: DRONE_SERIAL');
 }
@@ -114,15 +118,44 @@ function getRoutePosition(elapsedMs) {
   return route[0];
 }
 
+function buildMqttOptions() {
+  // Drones use plain MQTT on :1883 — no username/password (anonymous listener on broker)
+  return {
+    clientId: `sim-${serial}`,
+    connectTimeout: 30_000,
+    reconnectPeriod: 3_000,
+    protocolVersion: 4,
+  };
+}
+
 function connectMqtt() {
   return new Promise((resolve, reject) => {
-    const client = mqtt.connect(mqttBrokerUrl, {
-      username: serial,
-      reconnectPeriod: 5000,
+    const client = mqtt.connect(mqttBrokerUrl, buildMqttOptions());
+
+    const timeout = setTimeout(() => {
+      client.end(true);
+      reject(new Error('MQTT connect timeout (30s)'));
+    }, 30_000);
+
+    let connected = false;
+
+    client.on('connect', () => {
+      connected = true;
+      clearTimeout(timeout);
+      resolve(client);
     });
 
-    client.on('connect', () => resolve(client));
-    client.on('error', reject);
+    client.on('reconnect', () => {
+      if (!connected) console.warn('MQTT reconnecting...');
+    });
+
+    client.on('error', (err) => {
+      if (!connected) console.warn('MQTT error (will retry):', err.message);
+    });
+
+    client.on('close', () => {
+      if (!connected) console.warn('MQTT connection closed');
+    });
   });
 }
 

@@ -5,6 +5,7 @@ import { resolveDroneForTelemetry } from './resolve-drone-for-telemetry';
 import { ingestPosition } from './ingest-position';
 
 const TELEMETRY_TOPIC_PREFIX = 'droneradar/telemetry/';
+const MQTT_WATCHDOG_MS = 60_000;
 
 type TelemetryPayload = {
   regionCode?: string;
@@ -17,13 +18,19 @@ type TelemetryPayload = {
 };
 
 let client: MqttClient | null = null;
+let watchdogTimer: ReturnType<typeof setInterval> | null = null;
+let telemetryTopic: string | null = null;
 
 function buildMqttOptions(brokerUrl: string): IClientOptions {
   const options: IClientOptions = {
     clientId: process.env.MQTT_CLIENT_ID ?? 'droneradar-backend',
     username: process.env.MQTT_USERNAME,
     password: process.env.MQTT_PASSWORD,
-    reconnectPeriod: 5000,
+    reconnectPeriod: 5_000,
+    connectTimeout: 30_000,
+    keepalive: 30,
+    resubscribe: true,
+    clean: false,
   };
 
   if (!brokerUrl.startsWith('mqtts://') && !brokerUrl.startsWith('ssl://')) {
@@ -45,11 +52,31 @@ function buildMqttOptions(brokerUrl: string): IClientOptions {
     return options;
   }
 
-  // Self-signed cert CN may differ from fly.dev hostname — trust our CA.
   options.rejectUnauthorized = false;
   options.servername = process.env.MQTT_TLS_SERVERNAME ?? 'droneradar-mqtt';
 
   return options;
+}
+
+function subscribeTelemetry(mqttClient: MqttClient, topic: string): void {
+  mqttClient.subscribe(topic, (err) => {
+    if (err) {
+      console.error(`MQTT subscribe failed for ${topic}:`, err);
+      return;
+    }
+    console.log(`📡 MQTT subscribed to ${topic}`);
+  });
+}
+
+function startWatchdog(mqttClient: MqttClient): void {
+  if (watchdogTimer) clearInterval(watchdogTimer);
+
+  watchdogTimer = setInterval(() => {
+    if (!mqttClient.connected && !mqttClient.reconnecting) {
+      console.warn('MQTT watchdog: connection lost after idle — forcing reconnect');
+      mqttClient.reconnect();
+    }
+  }, MQTT_WATCHDOG_MS);
 }
 
 function parseSerialFromTopic(topic: string): string | null {
@@ -123,19 +150,25 @@ export function startMqttConsumer(): void {
     return;
   }
 
-  const topic = process.env.MQTT_TOPIC ?? 'droneradar/telemetry/#';
+  telemetryTopic = process.env.MQTT_TOPIC ?? 'droneradar/telemetry/#';
 
   client = mqtt.connect(brokerUrl, buildMqttOptions(brokerUrl));
 
   client.on('connect', () => {
     console.log(`📡 MQTT connected to ${brokerUrl}`);
-    client?.subscribe(topic, (err) => {
-      if (err) {
-        console.error(`MQTT subscribe failed for ${topic}:`, err);
-        return;
-      }
-      console.log(`📡 MQTT subscribed to ${topic}`);
-    });
+    if (telemetryTopic) subscribeTelemetry(client!, telemetryTopic);
+  });
+
+  client.on('reconnect', () => {
+    console.log('MQTT reconnecting...');
+  });
+
+  client.on('offline', () => {
+    console.warn('MQTT client offline');
+  });
+
+  client.on('close', () => {
+    console.warn('MQTT connection closed');
   });
 
   client.on('message', (topic, message) => {
@@ -146,12 +179,15 @@ export function startMqttConsumer(): void {
     console.error('MQTT client error:', err);
   });
 
-  client.on('reconnect', () => {
-    console.log('MQTT reconnecting...');
-  });
+  startWatchdog(client);
 }
 
 export function stopMqttConsumer(): void {
+  if (watchdogTimer) {
+    clearInterval(watchdogTimer);
+    watchdogTimer = null;
+  }
   client?.end(true);
   client = null;
+  telemetryTopic = null;
 }

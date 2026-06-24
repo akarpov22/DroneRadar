@@ -13,7 +13,7 @@ if [ ! -f "$CERT_DIR/ca.crt" ]; then
     -nodes -subj "/CN=DroneRadar MQTT CA"
   openssl req -new -nodes \
     -keyout "$CERT_DIR/server.key" -out "$CERT_DIR/server.csr" \
-    -subj "/CN=droneradar-mqtt"
+    -subj "/CN=droneradar-mqtt.fly.dev"
   openssl x509 -req -in "$CERT_DIR/server.csr" \
     -CA "$CERT_DIR/ca.crt" -CAkey "$CERT_DIR/ca.key" -CAcreateserial \
     -out "$CERT_DIR/server.crt" -days 3650

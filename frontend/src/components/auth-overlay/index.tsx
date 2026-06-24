@@ -139,7 +139,7 @@ function AuthOverlayInner({ onLoginModalOpenChange }: AuthOverlayProps) {
     const form = new FormData(e.currentTarget);
     const serial = String(form.get('serial') ?? '');
     const name = String(form.get('name') ?? '');
-    const regionCode = String(form.get('regionCode') ?? 'UA-KY');
+    const regionCode = String(form.get('regionCode') ?? '');
 
     try {
       const { data } = await registerDrone({
@@ -148,9 +148,9 @@ function AuthOverlayInner({ onLoginModalOpenChange }: AuthOverlayProps) {
 
       toast({
         title: t('auth-drone-registered'),
-        description: t('auth-device-token', { token: data.registerDrone.deviceToken }),
+        description: t('auth-device-token', { token: data?.registerDrone.deviceToken }),
         status: 'success',
-        duration: null,
+        duration: 8000,
         isClosable: true,
       });
       registerModal.onClose();
@@ -293,10 +293,10 @@ function AuthOverlayInner({ onLoginModalOpenChange }: AuthOverlayProps) {
                 </FormControl>
                 <FormControl isRequired>
                   <FormLabel>{t('auth-region-code')}</FormLabel>
-                  <Input name="regionCode" defaultValue="UA-KY" />
+                  <Input name="regionCode" defaultValue="UA" />
                 </FormControl>
                 <Code fontSize="xs" p={2} w="full">
-                  {t('auth-device-token-hint')}
+                  {t('auth-register-drone-hint')}
                 </Code>
               </VStack>
             </form>

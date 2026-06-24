@@ -1,19 +1,21 @@
 import 'dotenv/config';
-import { GraphQLClient, gql } from 'graphql-request';
-import { v4 as uuidv4 } from 'uuid';
+import mqtt from 'mqtt';
 
-const graphqlUrl = process.env.GRAPHQL_URL;
-const regionCode = process.env.REGION_ID;
+const mqttBrokerUrl = process.env.MQTT_BROKER_URL;
+const serial = process.env.DRONE_SERIAL;
+const regionCode = process.env.REGION_CODE;
 
-if (!graphqlUrl) {
-  throw new Error('Missing required environment variable: GRAPHQL_URL');
+if (!mqttBrokerUrl) {
+  throw new Error('Missing required environment variable: MQTT_BROKER_URL');
+}
+
+if (!serial) {
+  throw new Error('Missing required environment variable: DRONE_SERIAL');
 }
 
 if (!regionCode) {
-  throw new Error('Missing required environment variable: REGION_ID');
+  throw new Error('Missing required environment variable: REGION_CODE (ISO 3166-1 alpha-2, e.g. UA, SE)');
 }
-
-const client = new GraphQLClient(graphqlUrl);
 
 const sendIntervalMs = Number(process.env.SIMULATION_INTERVAL_MS ?? 500);
 const speedMultiplier = Number(process.env.SIMULATION_SPEED_MULTIPLIER ?? 1);
@@ -25,32 +27,10 @@ const route = [
   { latitude: 59.3357, longitude: 18.0754, altitude: 130 },
   { latitude: 59.3403, longitude: 18.0735, altitude: 122 },
   { latitude: 59.3385, longitude: 18.0701, altitude: 112 },
-  { latitude: 59.3334, longitude: 18.0680, altitude: 108 }
+  { latitude: 59.3334, longitude: 18.0680, altitude: 108 },
 ];
 
-const REGISTER_DRONE = gql`
-  mutation RegisterDroneIfNotExists($serial: String!, $regionCode: String!, $name: String!) {
-    registerDroneIfNotExists(input: { serial: $serial, regionCode: $regionCode, name: $name }) {
-      id
-    }
-  }
-`;
-
-const CREATE_SESSION = gql`
-  mutation CreateSession($droneId: ID!, $regionId: ID!) {
-    createSession(input: { droneId: $droneId, regionId: $regionId }) {
-      id
-    }
-  }
-`;
-
-const APPEND_POSITION = gql`
-  mutation AppendPosition($input: AppendPositionInput!) {
-    appendPosition(input: $input) {
-      id
-    }
-  }
-`;
+const telemetryTopic = `droneradar/telemetry/${serial}`;
 
 async function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -127,46 +107,56 @@ function getRoutePosition(elapsedMs) {
       longitude: lerp(from.longitude, to.longitude, progress),
       altitude: lerp(from.altitude, to.altitude, progress) + liveWave * 1.5,
       speed: speedKmh + Math.sin(elapsedMs / 3000) * 0.7,
-      heading: bearingDegrees(from, to)
+      heading: bearingDegrees(from, to),
     };
   }
 
   return route[0];
 }
 
+function connectMqtt() {
+  return new Promise((resolve, reject) => {
+    const client = mqtt.connect(mqttBrokerUrl, {
+      username: serial,
+      reconnectPeriod: 5000,
+    });
+
+    client.on('connect', () => resolve(client));
+    client.on('error', reject);
+  });
+}
+
 async function main() {
   console.log('🔧 Starting drone simulation...');
-  console.log(`📡 GraphQL endpoint: ${graphqlUrl}`);
+  console.log(`📡 MQTT broker: ${mqttBrokerUrl}`);
+  console.log(`🛰️ Topic: ${telemetryTopic}`);
   console.log(`🗺️ Route points: ${route.length}, update interval: ${sendIntervalMs}ms, speed: ${targetSpeedKmh} km/h`);
 
-  const serial = process.env.DRONE_SERIAL ?? 'SN-' + Math.floor(Math.random() * 100000);
-  const name = 'Drone-' + uuidv4().slice(0, 8);
-
-  const regRes = await client.request(REGISTER_DRONE, { serial, regionCode, name });
-  const droneId = regRes.registerDroneIfNotExists.id;
-
-  const sessionRes = await client.request(CREATE_SESSION, { droneId, regionId: regionCode });
-  const sessionId = sessionRes.createSession.id;
-
-  console.log(`🚁 Drone "${name}" (serial: ${serial}) registered and session ${sessionId} started.`);
+  const mqttClient = await connectMqtt();
+  console.log(`🚁 Drone serial "${serial}" connected to MQTT.`);
 
   const startedAt = Date.now();
 
   while (true) {
     const position = getRoutePosition(Date.now() - startedAt);
-    const input = {
-      droneId,
+    const payload = {
       latitude: Number(position.latitude.toFixed(6)),
       longitude: Number(position.longitude.toFixed(6)),
       altitude: Number(position.altitude.toFixed(1)),
       speed: Number(position.speed.toFixed(1)),
       heading: Number(position.heading.toFixed(1)),
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      regionCode,
     };
 
-    await client.request(APPEND_POSITION, { input });
-    console.log('📡 Sent position:', input);
-    console.log('Serial: ', serial);
+    await new Promise((resolve, reject) => {
+      mqttClient.publish(telemetryTopic, JSON.stringify(payload), { qos: 0 }, (err) => {
+        if (err) reject(err);
+        else resolve();
+      });
+    });
+
+    console.log('📡 Sent position:', payload);
     await delay(sendIntervalMs);
   }
 }

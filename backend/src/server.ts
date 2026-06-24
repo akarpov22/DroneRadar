@@ -10,6 +10,7 @@ import { buildContext } from './build-context';
 import { startPgListener } from './db/pg-listener';
 import { getCorsOrigin } from './config/cors';
 import { startFlightZoneSyncScheduler } from './services/flight-zones-db';
+import { startMqttConsumer } from './services/mqtt-consumer';
 
 async function startServer() {
   const app = express();
@@ -50,6 +51,7 @@ async function startServer() {
   );
 
   startPgListener();
+  startMqttConsumer();
   startFlightZoneSyncScheduler();
 
   if (process.env.AUTH0_DISABLED !== 'true') {

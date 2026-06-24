@@ -57,6 +57,7 @@ i18n
           "flight-zone-type-rsta": "Restricted areas (R)",
           "flight-zone-type-atz": "Aerodrome traffic zones (ATZ)",
           "flight-zone-type-notam": "NOTAM",
+          "flight-zone-description": "Zone description",
         },
       },
       uk: {
@@ -104,6 +105,7 @@ i18n
           "flight-zone-type-rsta": "Зони обмежень (R)",
           "flight-zone-type-atz": "Аеродромні зони (ATZ)",
           "flight-zone-type-notam": "NOTAM",
+          "flight-zone-description": "Опис зони",
         },
       },
     },

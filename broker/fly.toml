@@ -1,0 +1,32 @@
+# Rename app via: fly apps create droneradar-mqtt (or fly launch)
+app = "droneradar-mqtt"
+primary_region = "arn"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[[mounts]]
+  source = "mosquitto_data"
+  destination = "/mosquitto/persist"
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 1883
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[services.ports]]
+    port = 1883
+    handlers = []
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8883
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[services.ports]]
+    port = 8883
+    handlers = []

@@ -92,6 +92,46 @@ npm start
 
 ## Production
 
-- Mosquitto хоститься окремо (не на Render)
-- Backend: `MQTT_BROKER_URL`, `DATABASE_LISTEN_URL` (для PG NOTIFY)
-- Mosquitto: `allow_anonymous false`, TLS, ACL за `serial`
+### Компоненти
+
+| Сервіс | Платформа |
+|--------|-----------|
+| Frontend | Cloudflare Pages |
+| Backend (GraphQL) | Render |
+| PostgreSQL | Neon |
+| **Mosquitto** | **Fly.io** (окремий app) |
+
+```
+Drone/Simulator  →  mqtt://broker:1883  →  Fly.io Mosquitto
+Render backend  →  mqtts://broker:8883  →  (TLS + login/password)
+```
+
+### Деплой Mosquitto (Fly.io)
+
+```bash
+cd broker
+fly volumes create mosquitto_data --region arn --size 1
+fly secrets set MQTT_BACKEND_USER=backend-consumer MQTT_BACKEND_PASSWORD=<secret>
+fly deploy
+```
+
+### Env на Render (backend)
+
+```
+MQTT_BROKER_URL=mqtts://droneradar-mqtt.fly.dev:8883
+MQTT_USERNAME=backend-consumer
+MQTT_PASSWORD=<secret>
+MQTT_CA_PEM=<base64 CA з fly logs після першого deploy>
+MQTT_TOPIC=droneradar/telemetry/#
+DATABASE_LISTEN_URL=<Neon direct URL, без -pooler>
+CORS_ORIGINS=https://<your>.pages.dev
+```
+
+### Env симулятора (prod)
+
+```
+MQTT_BROKER_URL=mqtt://droneradar-mqtt.fly.dev:1883
+```
+
+- **Дрон → брокер:** порт `1883`, без TLS (відкритий ingest)
+- **Брокер → backend:** порт `8883`, MQTTS + credentials з env

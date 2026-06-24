@@ -1,4 +1,5 @@
-import mqtt, { MqttClient } from 'mqtt';
+import fs from 'fs';
+import mqtt, { MqttClient, IClientOptions } from 'mqtt';
 import { prisma } from '../context';
 import { resolveDroneForTelemetry } from './resolve-drone-for-telemetry';
 import { ingestPosition } from './ingest-position';
@@ -16,6 +17,35 @@ type TelemetryPayload = {
 };
 
 let client: MqttClient | null = null;
+
+function buildMqttOptions(brokerUrl: string): IClientOptions {
+  const options: IClientOptions = {
+    clientId: process.env.MQTT_CLIENT_ID ?? 'droneradar-backend',
+    username: process.env.MQTT_USERNAME,
+    password: process.env.MQTT_PASSWORD,
+    reconnectPeriod: 5000,
+  };
+
+  if (!brokerUrl.startsWith('mqtts://') && !brokerUrl.startsWith('ssl://')) {
+    return options;
+  }
+
+  const caPem = process.env.MQTT_CA_PEM;
+  const caPath = process.env.MQTT_CA_PATH;
+
+  if (caPem) {
+    options.ca = Buffer.from(caPem, 'base64').toString('utf8');
+  } else if (caPath && fs.existsSync(caPath)) {
+    options.ca = fs.readFileSync(caPath);
+  } else {
+    console.warn(
+      'MQTT: mqtts:// without MQTT_CA_PEM or MQTT_CA_PATH — TLS verification disabled',
+    );
+    options.rejectUnauthorized = false;
+  }
+
+  return options;
+}
 
 function parseSerialFromTopic(topic: string): string | null {
   if (!topic.startsWith(TELEMETRY_TOPIC_PREFIX)) {
@@ -89,14 +119,8 @@ export function startMqttConsumer(): void {
   }
 
   const topic = process.env.MQTT_TOPIC ?? 'droneradar/telemetry/#';
-  const clientId = process.env.MQTT_CLIENT_ID ?? 'droneradar-backend';
 
-  client = mqtt.connect(brokerUrl, {
-    clientId,
-    username: process.env.MQTT_USERNAME,
-    password: process.env.MQTT_PASSWORD,
-    reconnectPeriod: 5000,
-  });
+  client = mqtt.connect(brokerUrl, buildMqttOptions(brokerUrl));
 
   client.on('connect', () => {
     console.log(`📡 MQTT connected to ${brokerUrl}`);

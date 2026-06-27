@@ -1,4 +1,4 @@
-import { useEffect, type RefObject } from 'react';
+import { useEffect, useRef, type RefObject } from 'react';
 import OpenLayersMap from 'ol/Map';
 import View from 'ol/View';
 import TileLayer from 'ol/layer/Tile';
@@ -16,34 +16,45 @@ import { DEFAULT_MAP_ZOOM } from './types';
 interface UseOlMapInitOptions {
   mapRef: RefObject<HTMLDivElement | null>;
   zonesSource: VectorSource<Feature<Geometry>>;
+  userZonesSource: VectorSource<Feature<Geometry>>;
   droneSource: VectorSource<Feature<Point>>;
   dronePathSource: VectorSource<Feature<LineString>>;
   onSelectDrone: (drone: Drone | undefined) => void;
   onZoneTooltip: (text: string | null) => void;
+  onUserZoneSelect: (zoneId: string | null) => void;
   onMapReady: (map: OpenLayersMap | null) => void;
+  mapInteractionsEnabled?: boolean;
 }
 
 export function useOlMapInit({
   mapRef,
   zonesSource,
+  userZonesSource,
   droneSource,
   dronePathSource,
   onSelectDrone,
   onZoneTooltip,
+  onUserZoneSelect,
   onMapReady,
+  mapInteractionsEnabled = true,
 }: UseOlMapInitOptions) {
+  const mapInteractionsEnabledRef = useRef(mapInteractionsEnabled);
+  mapInteractionsEnabledRef.current = mapInteractionsEnabled;
+
   useEffect(() => {
     if (!mapRef.current) return;
 
     const zonesLayer = new VectorLayer({ source: zonesSource, zIndex: 1 });
-    const dronePathLayer = new VectorLayer({ source: dronePathSource, zIndex: 2 });
-    const droneLayer = new VectorLayer({ source: droneSource, zIndex: 3 });
+    const userZonesLayer = new VectorLayer({ source: userZonesSource, zIndex: 2 });
+    const dronePathLayer = new VectorLayer({ source: dronePathSource, zIndex: 3 });
+    const droneLayer = new VectorLayer({ source: droneSource, zIndex: 4 });
 
     const olMap = new OpenLayersMap({
       target: mapRef.current,
       layers: [
         new TileLayer({ source: new OSM() }),
         zonesLayer,
+        userZonesLayer,
         dronePathLayer,
         droneLayer,
       ],
@@ -77,14 +88,25 @@ export function useOlMapInit({
     }
 
     olMap.on('click', (evt) => {
+      if (!mapInteractionsEnabledRef.current) return;
+
       let handled = false;
 
       olMap.forEachFeatureAtPixel(evt.pixel, (feature) => {
         if (handled) return;
 
+        const userZoneId = feature.get('userZoneId');
+        if (userZoneId) {
+          handled = true;
+          onUserZoneSelect(userZoneId);
+          onZoneTooltip(null);
+          return;
+        }
+
         const zoneId = feature.get('zoneId');
         if (zoneId) {
           handled = true;
+          onUserZoneSelect(null);
           onZoneTooltip(formatZoneTooltip(feature as Feature<Geometry>));
           return;
         }
@@ -92,6 +114,7 @@ export function useOlMapInit({
         const id = feature.get('droneId');
         if (id) {
           handled = true;
+          onUserZoneSelect(null);
           onSelectDrone(getDroneSnapshot().find((d) => d.id === id));
           onZoneTooltip(null);
         }
@@ -100,6 +123,7 @@ export function useOlMapInit({
       if (!handled) {
         onSelectDrone(undefined);
         onZoneTooltip(null);
+        onUserZoneSelect(null);
       }
     });
 
@@ -107,5 +131,15 @@ export function useOlMapInit({
       olMap.setTarget(undefined);
       onMapReady(null);
     };
-  }, [mapRef, dronePathSource, droneSource, onMapReady, onSelectDrone, onZoneTooltip, zonesSource]);
+  }, [
+    mapRef,
+    dronePathSource,
+    droneSource,
+    onMapReady,
+    onSelectDrone,
+    onUserZoneSelect,
+    onZoneTooltip,
+    userZonesSource,
+    zonesSource,
+  ]);
 }

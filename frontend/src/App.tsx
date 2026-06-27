@@ -1,6 +1,7 @@
 import { DroneRadar } from './components/drone-radar';
 import { DroneDataProvider } from './components/drone-data-provider';
 import { DroneSelectionProvider } from './components/drone-selection-provider';
+import { UserZonesProvider } from './components/user-zones-provider';
 import { ApolloAuthProvider } from './components/apollo-auth-provider';
 import { isAuth0Disabled } from './auth/config';
 import { ApolloProvider } from '@apollo/client';
@@ -11,7 +12,9 @@ function AppShell() {
   return (
     <DroneDataProvider>
       <DroneSelectionProvider>
-        <DroneRadar />
+        <UserZonesProvider>
+          <DroneRadar />
+        </UserZonesProvider>
       </DroneSelectionProvider>
     </DroneDataProvider>
   );

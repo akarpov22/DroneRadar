@@ -102,3 +102,57 @@ export const FLIGHT_RESTRICTION_ZONES = gql`
     }
   }
 `;
+
+export const ME = gql`
+  query Me {
+    me {
+      id
+      role
+    }
+  }
+`;
+
+export const USER_ZONES = gql`
+  query UserZones {
+    userZones {
+      id
+      name
+      shapeType
+      geometry
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+export const CREATE_USER_ZONE = gql`
+  mutation CreateUserZone($input: CreateUserZoneInput!) {
+    createUserZone(input: $input) {
+      id
+      name
+      shapeType
+      geometry
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+export const UPDATE_USER_ZONE = gql`
+  mutation UpdateUserZone($input: UpdateUserZoneInput!) {
+    updateUserZone(input: $input) {
+      id
+      name
+      shapeType
+      geometry
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+export const DELETE_USER_ZONE = gql`
+  mutation DeleteUserZone($id: ID!) {
+    deleteUserZone(id: $id)
+  }
+`;

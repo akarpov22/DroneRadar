@@ -10,6 +10,10 @@ import {
   type ZoneFilters,
   type ZoneFilterType,
 } from '../../utils/flight-zones';
+import {
+  applyUserZoneFeatureProps,
+  type UserZoneResult,
+} from '../../utils/user-zones';
 import { getCurrentSession, getDroneLatestPosition } from '../../utils/drone';
 import type { Drone } from '../../utils/types';
 import type { FlightRestrictionZoneResult } from './types';
@@ -31,6 +35,24 @@ export function zonesToFeatures(
       parsed.forEach((feature) => applyZoneFeatureProps(feature, zone));
       return parsed;
     });
+}
+
+export function userZonesToFeatures(
+  zones: UserZoneResult[],
+  selectedZoneId?: string | null,
+): Feature<Geometry>[] {
+  return zones.flatMap((zone) => {
+    const parsed = geoJsonFormat.readFeatures(
+      { type: 'Feature', geometry: zone.geometry, properties: {} },
+      { dataProjection: 'EPSG:4326', featureProjection: 'EPSG:3857' },
+    ) as Feature<Geometry>[];
+    parsed.forEach((feature) => applyUserZoneFeatureProps(
+      feature,
+      zone,
+      zone.id === selectedZoneId,
+    ));
+    return parsed;
+  });
 }
 
 export function formatZoneTooltip(feature: Feature<Geometry>): string {

@@ -1,0 +1,14 @@
+enum UserZoneShape {
+  POLYGON
+  RECTANGLE
+  CIRCLE
+}
+
+type UserZone {
+  id: ID!
+  name: String
+  shapeType: UserZoneShape!
+  geometry: JSONObject!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}

@@ -1,5 +1,5 @@
 import { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
-import { Drone as PrismaDrone, DroneModel as PrismaDroneModel, DroneSession as PrismaDroneSession, Operator as PrismaOperator, Position as PrismaPosition, Region as PrismaRegion, User as PrismaUser } from '../prisma/client';
+import { Drone as PrismaDrone, DroneModel as PrismaDroneModel, DroneSession as PrismaDroneSession, Operator as PrismaOperator, Position as PrismaPosition, Region as PrismaRegion, User as PrismaUser, UserZone as PrismaUserZone } from '../prisma/client';
 import { Context } from '../context';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
@@ -63,6 +63,12 @@ export type CreateSessionInput = {
   regionId: Scalars['ID']['input'];
 };
 
+export type CreateUserZoneInput = {
+  geometry: Scalars['JSONObject']['input'];
+  name?: InputMaybe<Scalars['String']['input']>;
+  shapeType: UserZoneShape;
+};
+
 export type Drone = {
   __typename?: 'Drone';
   createdAt: Scalars['DateTime']['output'];
@@ -121,9 +127,12 @@ export type Mutation = {
   createOperator: Operator;
   createRegion: Region;
   createSession: DroneSession;
+  createUserZone: UserZone;
+  deleteUserZone: Scalars['Boolean']['output'];
   endSession: DroneSession;
   registerDrone: RegisterDronePayload;
   registerDroneIfNotExists: Drone;
+  updateUserZone: UserZone;
 };
 
 
@@ -162,6 +171,16 @@ export type MutationCreateSessionArgs = {
 };
 
 
+export type MutationCreateUserZoneArgs = {
+  input: CreateUserZoneInput;
+};
+
+
+export type MutationDeleteUserZoneArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationEndSessionArgs = {
   input: EndSessionInput;
 };
@@ -174,6 +193,11 @@ export type MutationRegisterDroneArgs = {
 
 export type MutationRegisterDroneIfNotExistsArgs = {
   input: RegisterDroneIfNotExistsInput;
+};
+
+
+export type MutationUpdateUserZoneArgs = {
+  input: UpdateUserZoneInput;
 };
 
 export type Operator = {
@@ -212,6 +236,7 @@ export type Query = {
   positions: Array<Position>;
   region: Region;
   regions: Array<Region>;
+  userZones: Array<UserZone>;
 };
 
 
@@ -286,6 +311,12 @@ export type Subscription = {
   droneUpdated: Drone;
 };
 
+export type UpdateUserZoneInput = {
+  geometry?: InputMaybe<Scalars['JSONObject']['input']>;
+  id: Scalars['ID']['input'];
+  name?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type User = {
   __typename?: 'User';
   createdAt: Scalars['DateTime']['output'];
@@ -298,6 +329,22 @@ export enum UserRole {
   Admin = 'ADMIN',
   Observer = 'OBSERVER',
   Pilot = 'PILOT'
+}
+
+export type UserZone = {
+  __typename?: 'UserZone';
+  createdAt: Scalars['DateTime']['output'];
+  geometry: Scalars['JSONObject']['output'];
+  id: Scalars['ID']['output'];
+  name?: Maybe<Scalars['String']['output']>;
+  shapeType: UserZoneShape;
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+export enum UserZoneShape {
+  Circle = 'CIRCLE',
+  Polygon = 'POLYGON',
+  Rectangle = 'RECTANGLE'
 }
 
 
@@ -379,6 +426,7 @@ export type ResolversTypes = {
   CreateOperatorInput: CreateOperatorInput;
   CreateRegionInput: CreateRegionInput;
   CreateSessionInput: CreateSessionInput;
+  CreateUserZoneInput: CreateUserZoneInput;
   DateTime: ResolverTypeWrapper<Scalars['DateTime']['output']>;
   Drone: ResolverTypeWrapper<PrismaDrone>;
   DroneModel: ResolverTypeWrapper<PrismaDroneModel>;
@@ -398,8 +446,11 @@ export type ResolversTypes = {
   RegisterDronePayload: ResolverTypeWrapper<Omit<RegisterDronePayload, 'drone'> & { drone: ResolversTypes['Drone'] }>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
   Subscription: ResolverTypeWrapper<{}>;
+  UpdateUserZoneInput: UpdateUserZoneInput;
   User: ResolverTypeWrapper<PrismaUser>;
   UserRole: UserRole;
+  UserZone: ResolverTypeWrapper<PrismaUserZone>;
+  UserZoneShape: UserZoneShape;
 };
 
 /** Mapping between all available schema types and the resolvers parents */
@@ -412,6 +463,7 @@ export type ResolversParentTypes = {
   CreateOperatorInput: CreateOperatorInput;
   CreateRegionInput: CreateRegionInput;
   CreateSessionInput: CreateSessionInput;
+  CreateUserZoneInput: CreateUserZoneInput;
   DateTime: Scalars['DateTime']['output'];
   Drone: PrismaDrone;
   DroneModel: PrismaDroneModel;
@@ -431,7 +483,9 @@ export type ResolversParentTypes = {
   RegisterDronePayload: Omit<RegisterDronePayload, 'drone'> & { drone: ResolversParentTypes['Drone'] };
   String: Scalars['String']['output'];
   Subscription: {};
+  UpdateUserZoneInput: UpdateUserZoneInput;
   User: PrismaUser;
+  UserZone: PrismaUserZone;
 };
 
 export interface DateTimeScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['DateTime'], any> {
@@ -495,9 +549,12 @@ export type MutationResolvers<ContextType = Context, ParentType extends Resolver
   createOperator?: Resolver<ResolversTypes['Operator'], ParentType, ContextType, RequireFields<MutationCreateOperatorArgs, 'input'>>;
   createRegion?: Resolver<ResolversTypes['Region'], ParentType, ContextType, RequireFields<MutationCreateRegionArgs, 'input'>>;
   createSession?: Resolver<ResolversTypes['DroneSession'], ParentType, ContextType, RequireFields<MutationCreateSessionArgs, 'input'>>;
+  createUserZone?: Resolver<ResolversTypes['UserZone'], ParentType, ContextType, RequireFields<MutationCreateUserZoneArgs, 'input'>>;
+  deleteUserZone?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteUserZoneArgs, 'id'>>;
   endSession?: Resolver<ResolversTypes['DroneSession'], ParentType, ContextType, RequireFields<MutationEndSessionArgs, 'input'>>;
   registerDrone?: Resolver<ResolversTypes['RegisterDronePayload'], ParentType, ContextType, RequireFields<MutationRegisterDroneArgs, 'input'>>;
   registerDroneIfNotExists?: Resolver<ResolversTypes['Drone'], ParentType, ContextType, RequireFields<MutationRegisterDroneIfNotExistsArgs, 'input'>>;
+  updateUserZone?: Resolver<ResolversTypes['UserZone'], ParentType, ContextType, RequireFields<MutationUpdateUserZoneArgs, 'input'>>;
 };
 
 export type OperatorResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Operator'] = ResolversParentTypes['Operator']> = {
@@ -535,6 +592,7 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   positions?: Resolver<Array<ResolversTypes['Position']>, ParentType, ContextType>;
   region?: Resolver<ResolversTypes['Region'], ParentType, ContextType, RequireFields<QueryRegionArgs, 'id'>>;
   regions?: Resolver<Array<ResolversTypes['Region']>, ParentType, ContextType>;
+  userZones?: Resolver<Array<ResolversTypes['UserZone']>, ParentType, ContextType>;
 };
 
 export type RegionResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Region'] = ResolversParentTypes['Region']> = {
@@ -563,6 +621,16 @@ export type UserResolvers<ContextType = Context, ParentType extends ResolversPar
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type UserZoneResolvers<ContextType = Context, ParentType extends ResolversParentTypes['UserZone'] = ResolversParentTypes['UserZone']> = {
+  createdAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
+  geometry?: Resolver<ResolversTypes['JSONObject'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  shapeType?: Resolver<ResolversTypes['UserZoneShape'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type Resolvers<ContextType = Context> = {
   DateTime?: GraphQLScalarType;
   Drone?: DroneResolvers<ContextType>;
@@ -578,5 +646,6 @@ export type Resolvers<ContextType = Context> = {
   RegisterDronePayload?: RegisterDronePayloadResolvers<ContextType>;
   Subscription?: SubscriptionResolvers<ContextType>;
   User?: UserResolvers<ContextType>;
+  UserZone?: UserZoneResolvers<ContextType>;
 };
 

@@ -19,6 +19,7 @@ const config: CodegenConfig = {
           Position: '../prisma/client#Position as PrismaPosition',
           Region: '../prisma/client#Region as PrismaRegion',
           User: '../prisma/client#User as PrismaUser',
+          UserZone: '../prisma/client#UserZone as PrismaUserZone',
         },
         contextType: '../context#Context',
       },

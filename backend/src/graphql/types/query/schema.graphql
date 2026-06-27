@@ -19,4 +19,5 @@ type Query {
     north: Float!
     includeNotam: Boolean
   ): [FlightRestrictionZone!]!
+  userZones: [UserZone!]!
 }

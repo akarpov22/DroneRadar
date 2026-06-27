@@ -1,0 +1,9 @@
+extend type Mutation {
+  updateUserZone(input: UpdateUserZoneInput!): UserZone!
+}
+
+input UpdateUserZoneInput {
+  id: ID!
+  name: String
+  geometry: JSONObject
+}

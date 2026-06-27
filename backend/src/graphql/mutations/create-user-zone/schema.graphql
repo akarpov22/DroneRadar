@@ -1,0 +1,9 @@
+extend type Mutation {
+  createUserZone(input: CreateUserZoneInput!): UserZone!
+}
+
+input CreateUserZoneInput {
+  name: String
+  shapeType: UserZoneShape!
+  geometry: JSONObject!
+}

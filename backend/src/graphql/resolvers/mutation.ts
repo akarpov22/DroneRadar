@@ -9,6 +9,9 @@ import { createSession } from "../mutations/create-session";
 import { createOperator } from "../mutations/create-operator";
 import { createRegion } from "../mutations/create-region";
 import { createDroneModel } from "../mutations/create-drone-model";
+import { createUserZone } from "../mutations/create-user-zone";
+import { updateUserZone } from "../mutations/update-user-zone";
+import { deleteUserZone } from "../mutations/delete-user-zone";
 
 export const mutationResolvers: MutationResolvers = {
     registerDrone,
@@ -20,5 +23,8 @@ export const mutationResolvers: MutationResolvers = {
     createSession,
     createOperator,
     createRegion,
-    createDroneModel
+    createDroneModel,
+    createUserZone,
+    updateUserZone,
+    deleteUserZone,
 }

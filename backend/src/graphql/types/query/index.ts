@@ -1,7 +1,8 @@
 import { UserRole } from '@prisma/client';
 import { QueryResolvers } from "../../../generated/schema";
-import { requireAuth } from "../../../auth/guards";
+import { requireAuth, requireRole } from "../../../auth/guards";
 import { getFlightZonesByBbox } from "../../../services/flight-zones-db";
+import { listUserZones } from "../../../services/user-zones";
 
 export const queryResolvers: QueryResolvers = {
     me: (_, __, ctx) => requireAuth(ctx),
@@ -59,6 +60,10 @@ export const queryResolvers: QueryResolvers = {
     },
     flightRestrictionZones: async (_, { west, south, east, north, includeNotam }) => {
         return getFlightZonesByBbox([west, south, east, north], includeNotam ?? false);
+    },
+    userZones: (_, __, ctx) => {
+        const user = requireRole(ctx, [UserRole.PILOT]);
+        return listUserZones(user.id);
     },
 }
 

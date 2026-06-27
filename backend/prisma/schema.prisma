@@ -14,12 +14,36 @@ enum UserRole {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  auth0Sub  String   @unique
+  id        String     @id @default(uuid())
+  auth0Sub  String     @unique
   email     String?
-  role      UserRole @default(OBSERVER)
+  role      UserRole   @default(OBSERVER)
   drones    Drone[]
-  createdAt DateTime @default(now())
+  userZones UserZone[]
+  createdAt DateTime   @default(now())
+}
+
+enum UserZoneShape {
+  POLYGON
+  RECTANGLE
+  CIRCLE
+}
+
+model UserZone {
+  id        String        @id @default(uuid())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String?
+  shapeType UserZoneShape
+  geometry  Json
+  west      Float
+  south     Float
+  east      Float
+  north     Float
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([userId])
 }
 
 model Drone {

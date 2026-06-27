@@ -52,6 +52,29 @@ function isDroneExpired(recordedAt?: string): boolean {
   return Date.now() - new Date(recordedAt).getTime() > 60_000;
 }
 
+export function applyDroneFeatureStyle(
+  feature: Feature<Point>,
+  heading: number,
+  selected: boolean,
+): void {
+  let style = feature.get('droneStyle') as Style | undefined;
+  const wasSelected = feature.get('droneSelected') as boolean | undefined;
+
+  if (!style || wasSelected !== selected) {
+    style = createDroneStyle(heading, selected);
+    feature.set('droneStyle', style);
+    feature.set('droneSelected', selected);
+    feature.setStyle(style);
+    return;
+  }
+
+  const icon = style.getImage();
+  if (icon instanceof Icon) {
+    icon.setRotation(degreesToRadians(heading));
+    feature.changed();
+  }
+}
+
 function createDroneStyle(heading: number, selected: boolean): Style {
   return new Style({
     image: new Icon({
@@ -104,9 +127,37 @@ export function buildDroneFeatures(
 
 export function buildDronePathFeature(
   drones: Drone[],
-  selectedDroneId: number | undefined,
+  selectedDroneId: string | undefined,
   isDisplayOwned: boolean,
+  trailEnd?: { longitude: number; latitude: number },
+  pathCutoffRecordedAt?: string,
 ): Feature<LineString> | null {
+  const coordinates = buildDronePathCoordinates(
+    drones,
+    selectedDroneId,
+    isDisplayOwned,
+    trailEnd,
+    pathCutoffRecordedAt,
+  );
+  if (!coordinates) return null;
+
+  const lineFeature = new Feature({ geometry: new LineString(coordinates) });
+  const drone = drones.find((d) => d.id === selectedDroneId);
+  if (drone) {
+    lineFeature.set('droneId', drone.id);
+    lineFeature.set('droneSerial', drone.serial);
+  }
+  lineFeature.setStyle(new Style({ stroke: new Stroke({ color: 'red', width: 3 }) }));
+  return lineFeature;
+}
+
+export function buildDronePathCoordinates(
+  drones: Drone[],
+  selectedDroneId: string | undefined,
+  isDisplayOwned: boolean,
+  trailEnd?: { longitude: number; latitude: number },
+  pathCutoffRecordedAt?: string,
+): number[][] | null {
   if (selectedDroneId == null) return null;
 
   const ownedSerials = getOwnedSerials();
@@ -119,12 +170,27 @@ export function buildDronePathFeature(
   }
 
   const session = getCurrentSession(drone.sessions);
-  const path = session?.positions.map((p) => fromLonLat([p.longitude, p.latitude])) ?? [];
-  if (path.length === 0) return null;
+  const positions = session?.positions ?? [];
+  if (positions.length === 0) return null;
 
-  const lineFeature = new Feature({ geometry: new LineString(path) });
-  lineFeature.set('droneId', drone.id);
-  lineFeature.set('droneSerial', drone.serial);
-  lineFeature.setStyle(new Style({ stroke: new Stroke({ color: 'red', width: 3 }) }));
-  return lineFeature;
+  let included = positions;
+  if (trailEnd && pathCutoffRecordedAt) {
+    const cutoffMs = new Date(pathCutoffRecordedAt).getTime();
+    included = positions.filter((p) => new Date(p.recordedAt).getTime() <= cutoffMs);
+  } else if (trailEnd) {
+    included = positions.slice(0, -1);
+  }
+
+  const coordinates = included.map((p) => fromLonLat([p.longitude, p.latitude]));
+  if (trailEnd) {
+    const trailCoord = fromLonLat([trailEnd.longitude, trailEnd.latitude]);
+    const last = coordinates.at(-1);
+    if (!last || last[0] !== trailCoord[0] || last[1] !== trailCoord[1]) {
+      coordinates.push(trailCoord);
+    }
+  }
+
+  if (coordinates.length === 0) return null;
+
+  return coordinates;
 }

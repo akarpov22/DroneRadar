@@ -1,9 +1,12 @@
 import 'dotenv/config';
 import mqtt from 'mqtt';
+import { buildRouteNavigator } from './geo.js';
+import { getRouteByIndex, resolveRouteIndex, ROUTES } from './routes.js';
 
 const mqttBrokerUrl = process.env.MQTT_BROKER_URL;
 const serial = process.env.DRONE_SERIAL;
 const regionCode = process.env.REGION_CODE;
+const routeIndexEnv = process.env.ROUTE_INDEX;
 
 if (!mqttBrokerUrl) {
   throw new Error('Missing required environment variable: MQTT_BROKER_URL');
@@ -24,15 +27,15 @@ if (!regionCode) {
 const sendIntervalMs = Number(process.env.SIMULATION_INTERVAL_MS ?? 500);
 const speedMultiplier = Number(process.env.SIMULATION_SPEED_MULTIPLIER ?? 1);
 const targetSpeedKmh = Number(process.env.SIMULATION_SPEED_KMH ?? 20);
+const routePhaseMs = Number(process.env.ROUTE_PHASE_MS ?? 0);
 
-const route = [
-  { latitude: 59.3293, longitude: 18.0686, altitude: 105 },
-  { latitude: 59.3319, longitude: 18.0718, altitude: 118 },
-  { latitude: 59.3357, longitude: 18.0754, altitude: 130 },
-  { latitude: 59.3403, longitude: 18.0735, altitude: 122 },
-  { latitude: 59.3385, longitude: 18.0701, altitude: 112 },
-  { latitude: 59.3334, longitude: 18.0680, altitude: 108 },
-];
+const routeIndex = resolveRouteIndex(serial, routeIndexEnv);
+const selectedRoute = getRouteByIndex(routeIndex);
+const { getPosition: getRoutePosition } = buildRouteNavigator(
+  selectedRoute.waypoints,
+  targetSpeedKmh,
+  speedMultiplier,
+);
 
 const telemetryTopic = `droneradar/telemetry/${serial}`;
 
@@ -40,86 +43,7 @@ async function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function toRadians(degrees) {
-  return degrees * Math.PI / 180;
-}
-
-function toDegrees(radians) {
-  return radians * 180 / Math.PI;
-}
-
-function distanceMeters(from, to) {
-  const earthRadiusMeters = 6371000;
-  const lat1 = toRadians(from.latitude);
-  const lat2 = toRadians(to.latitude);
-  const deltaLat = toRadians(to.latitude - from.latitude);
-  const deltaLon = toRadians(to.longitude - from.longitude);
-
-  const a = Math.sin(deltaLat / 2) ** 2
-    + Math.cos(lat1) * Math.cos(lat2) * Math.sin(deltaLon / 2) ** 2;
-
-  return earthRadiusMeters * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-
-function segmentDurationMs(from, to) {
-  const targetSpeedMetersPerSecond = targetSpeedKmh / 3.6;
-
-  return distanceMeters(from, to) / targetSpeedMetersPerSecond * 1000;
-}
-
-const routeDurationMs = route.reduce((sum, point, index) => {
-  const nextPoint = route[(index + 1) % route.length];
-
-  return sum + segmentDurationMs(point, nextPoint);
-}, 0);
-
-function bearingDegrees(from, to) {
-  const lat1 = toRadians(from.latitude);
-  const lat2 = toRadians(to.latitude);
-  const deltaLon = toRadians(to.longitude - from.longitude);
-
-  const y = Math.sin(deltaLon) * Math.cos(lat2);
-  const x = Math.cos(lat1) * Math.sin(lat2)
-    - Math.sin(lat1) * Math.cos(lat2) * Math.cos(deltaLon);
-
-  return (toDegrees(Math.atan2(y, x)) + 360) % 360;
-}
-
-function lerp(from, to, progress) {
-  return from + (to - from) * progress;
-}
-
-function getRoutePosition(elapsedMs) {
-  let timeOnRouteMs = (elapsedMs * speedMultiplier) % routeDurationMs;
-
-  for (let index = 0; index < route.length; index += 1) {
-    const from = route[index];
-    const to = route[(index + 1) % route.length];
-    const durationMs = segmentDurationMs(from, to);
-
-    if (timeOnRouteMs > durationMs) {
-      timeOnRouteMs -= durationMs;
-      continue;
-    }
-
-    const progress = timeOnRouteMs / durationMs;
-    const speedKmh = targetSpeedKmh * speedMultiplier;
-    const liveWave = Math.sin(elapsedMs / 4500);
-
-    return {
-      latitude: lerp(from.latitude, to.latitude, progress),
-      longitude: lerp(from.longitude, to.longitude, progress),
-      altitude: lerp(from.altitude, to.altitude, progress) + liveWave * 1.5,
-      speed: speedKmh + Math.sin(elapsedMs / 3000) * 0.7,
-      heading: bearingDegrees(from, to),
-    };
-  }
-
-  return route[0];
-}
-
 function buildMqttOptions() {
-  // Drones use plain MQTT on :1883 — no username/password (anonymous listener on broker)
   return {
     clientId: `sim-${serial}`,
     connectTimeout: 30_000,
@@ -163,12 +87,22 @@ async function main() {
   console.log('🔧 Starting drone simulation...');
   console.log(`📡 MQTT broker: ${mqttBrokerUrl}`);
   console.log(`🛰️ Topic: ${telemetryTopic}`);
-  console.log(`🗺️ Route points: ${route.length}, update interval: ${sendIntervalMs}ms, speed: ${targetSpeedKmh} km/h`);
+  console.log(`🗺️ Route #${routeIndex}: ${selectedRoute.name} (${selectedRoute.waypoints.length} points)`);
+  if (selectedRoute.zoneType) {
+    console.log(`🚫 Zone type: ${selectedRoute.zoneType} — ${selectedRoute.zoneLabel ?? ''}`);
+  } else if (selectedRoute.zoneLabel) {
+    console.log(`🚫 Crossing restriction zone: ${selectedRoute.zoneLabel}`);
+  }
+  console.log(`📋 ${ROUTES.length} routes available — each emulator instance = one drone`);
+  console.log(`⏱️ Update interval: ${sendIntervalMs}ms, speed: ${targetSpeedKmh} km/h`);
 
   const mqttClient = await connectMqtt();
   console.log(`🚁 Drone serial "${serial}" connected to MQTT.`);
+  if (routePhaseMs > 0) {
+    console.log(`⏳ Route phase offset: ${Math.round(routePhaseMs / 1000)}s`);
+  }
 
-  const startedAt = Date.now();
+  const startedAt = Date.now() - routePhaseMs;
 
   while (true) {
     const position = getRoutePosition(Date.now() - startedAt);

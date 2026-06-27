@@ -67,7 +67,23 @@ services:
     depends_on:
       - backend
 
+  simulator-fleet:
+    build:
+      context: ./simulator
+    container_name: drone-tracker-simulator-fleet
+    restart: unless-stopped
+    environment:
+      MQTT_BROKER_URL: mqtt://mosquitto:1883
+      REGION_CODE: ${REGION_CODE:-SE}
+      FLEET_COUNT: ${FLEET_COUNT:-8}
+      SIMULATION_INTERVAL_MS: ${SIMULATION_INTERVAL_MS:-500}
+      SIMULATION_SPEED_KMH: ${SIMULATION_SPEED_KMH:-20}
+    command: ["node", "spawn-fleet.js"]
+    depends_on:
+      - mosquitto
+
   simulator:
+    profiles: ["single-drone"]
     build:
       context: ./simulator
     container_name: drone-tracker-simulator

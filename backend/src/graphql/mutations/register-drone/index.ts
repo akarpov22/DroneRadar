@@ -16,24 +16,18 @@ export const registerDrone: MutationResolvers['registerDrone'] = async (_, { inp
   const deviceTokenHash = hashDeviceToken(deviceToken);
 
   const existing = await ctx.prisma.drone.findUnique({ where: { serial } });
+  if (!existing) {
+    throw new Error('Drone not found');
+  }
 
-  const drone = existing
-    ? await ctx.prisma.drone.update({
-        where: { serial },
-        data: {
-          name,
-          pilotId: user.id,
-          deviceTokenHash,
-        },
-      })
-    : await ctx.prisma.drone.create({
-        data: {
-          serial,
-          name,
-          pilotId: user.id,
-          deviceTokenHash,
-        },
-      });
+  const drone = await ctx.prisma.drone.update({
+    where: { serial },
+    data: {
+      name,
+      pilotId: user.id,
+      deviceTokenHash,
+    },
+  });
 
   const activeSession = await ctx.prisma.droneSession.findFirst({
     where: { droneId: drone.id, endedAt: null },

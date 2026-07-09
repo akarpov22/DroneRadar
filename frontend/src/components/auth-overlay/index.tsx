@@ -24,7 +24,7 @@ import { useMutation, useQuery } from '@apollo/client';
 import { gql } from '@apollo/client';
 import { isAuth0Disabled } from '../../auth/config';
 import { useAuthSession } from '../../auth/use-auth-session';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LanguageSwitcher } from '../language-switcher';
 
@@ -46,7 +46,6 @@ const REGISTER_DRONE = gql`
         serial
         name
       }
-      deviceToken
     }
   }
 `;
@@ -77,6 +76,7 @@ function AuthOverlayInner({ onLoginModalOpenChange }: AuthOverlayProps) {
   const registerModal = useDisclosure();
   const toast = useToast();
   const hasAutoOpened = useRef(false);
+  const [registerFormKey, setRegisterFormKey] = useState(0);
 
   const { data: meData } = useQuery(ME, {
     skip: !isAuthenticated || isLoading,
@@ -142,22 +142,22 @@ function AuthOverlayInner({ onLoginModalOpenChange }: AuthOverlayProps) {
     const regionCode = String(form.get('regionCode') ?? '');
 
     try {
-      const { data } = await registerDrone({
+      await registerDrone({
         variables: { input: { serial, name, regionCode } },
       });
 
       toast({
         title: t('auth-drone-registered'),
-        description: t('auth-device-token', { token: data?.registerDrone.deviceToken }),
         status: 'success',
-        duration: 8000,
+        duration: 5000,
         isClosable: true,
       });
       registerModal.onClose();
     } catch (err) {
+      const message = err instanceof Error ? err.message : t('auth-unknown-error');
       toast({
         title: t('auth-register-error'),
-        description: err instanceof Error ? err.message : t('auth-unknown-error'),
+        description: message === 'Drone not found' ? t('auth-drone-not-found') : message,
         status: 'error',
         duration: 5000,
       });
@@ -254,6 +254,7 @@ function AuthOverlayInner({ onLoginModalOpenChange }: AuthOverlayProps) {
                 variant="outline"
                 onClick={() => {
                   accountModal.onClose();
+                  setRegisterFormKey((k) => k + 1);
                   registerModal.onOpen();
                 }}
               >
@@ -281,19 +282,19 @@ function AuthOverlayInner({ onLoginModalOpenChange }: AuthOverlayProps) {
           <ModalHeader>{t('auth-register-drone-title')}</ModalHeader>
           <ModalCloseButton />
           <ModalBody pb={6}>
-            <form id="register-drone-form" onSubmit={handleRegister}>
+            <form key={registerFormKey} id="register-drone-form" onSubmit={handleRegister}>
               <VStack spacing={4}>
                 <FormControl isRequired>
                   <FormLabel>{t('auth-serial')}</FormLabel>
-                  <Input name="serial" defaultValue="7777MYDRONE7" />
+                  <Input name="serial" />
                 </FormControl>
                 <FormControl isRequired>
                   <FormLabel>{t('auth-name')}</FormLabel>
-                  <Input name="name" defaultValue="My Drone" />
+                  <Input name="name" />
                 </FormControl>
                 <FormControl isRequired>
                   <FormLabel>{t('auth-region-code')}</FormLabel>
-                  <Input name="regionCode" defaultValue="UA" />
+                  <Input name="regionCode" />
                 </FormControl>
                 <Code fontSize="xs" p={2} w="full">
                   {t('auth-register-drone-hint')}

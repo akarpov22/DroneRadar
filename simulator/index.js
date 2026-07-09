@@ -2,11 +2,16 @@ import 'dotenv/config';
 import mqtt from 'mqtt';
 import { buildRouteNavigator } from './geo.js';
 import { getRouteByIndex, resolveRouteIndex, ROUTES } from './routes.js';
+import { resolveDroneSerial } from './serials.js';
 
 const mqttBrokerUrl = process.env.MQTT_BROKER_URL;
-const serial = process.env.DRONE_SERIAL;
 const regionCode = process.env.REGION_CODE;
 const routeIndexEnv = process.env.ROUTE_INDEX;
+const serial = resolveDroneSerial({
+  serial: process.env.DRONE_SERIAL,
+  instanceIndex: process.env.FLEET_INSTANCE_INDEX,
+  regionCode,
+});
 
 if (!mqttBrokerUrl) {
   throw new Error('Missing required environment variable: MQTT_BROKER_URL');
@@ -17,7 +22,7 @@ if (mqttBrokerUrl.startsWith('mqtts://') || mqttBrokerUrl.startsWith('ssl://')) 
 }
 
 if (!serial) {
-  throw new Error('Missing required environment variable: DRONE_SERIAL');
+  throw new Error('Missing drone serial: set DRONE_SERIAL or FLEET_INSTANCE_INDEX');
 }
 
 if (!regionCode) {

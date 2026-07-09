@@ -3,29 +3,40 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { ROUTES } from './routes.js';
+import { buildDroneSerial } from './serials.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const indexPath = join(__dirname, 'index.js');
 
-const count = Number(process.argv[2] ?? process.env.FLEET_COUNT ?? 5);
+const regionCode = process.env.REGION_CODE ?? 'SE';
+const count = Number(process.argv[2] ?? process.env.FLEET_COUNT ?? ROUTES.length);
 if (!Number.isInteger(count) || count < 1) {
   throw new Error('Fleet count must be a positive integer (argv or FLEET_COUNT)');
 }
 
 const children = [];
+const usedSerials = new Set();
 
 function spawnDrone(index) {
-  const serial = `SE-SIM-${String(index + 1).padStart(3, '0')}`;
+  const serial = buildDroneSerial(index, regionCode);
+  if (usedSerials.has(serial)) {
+    throw new Error(`Duplicate drone serial in fleet: ${serial}`);
+  }
+  usedSerials.add(serial);
+
   const routeIndex = index % ROUTES.length;
   const route = ROUTES[routeIndex];
 
+  const { DRONE_SERIAL: _ignoredSerial, ...baseEnv } = process.env;
+
   const child = spawn(process.execPath, [indexPath], {
     env: {
-      ...process.env,
+      ...baseEnv,
       DRONE_SERIAL: serial,
+      FLEET_INSTANCE_INDEX: String(index),
       ROUTE_INDEX: String(routeIndex),
       ROUTE_PHASE_MS: String(index * 90_000),
-      REGION_CODE: process.env.REGION_CODE ?? 'SE',
+      REGION_CODE: regionCode,
     },
     stdio: 'inherit',
   });

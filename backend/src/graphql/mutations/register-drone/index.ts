@@ -7,12 +7,12 @@ export const registerDrone: MutationResolvers['registerDrone'] = async (_, { inp
   const { serial, name, regionCode, modelId } = input;
 
   const region = await ctx.prisma.region.findUnique({ where: { regionCode } });
-  if (!region) {
+  if (!region || !region.active) {
     throw new Error('Region not found');
   }
 
   const model = await ctx.prisma.droneModel.findUnique({ where: { id: modelId } });
-  if (!model) {
+  if (!model || !model.active) {
     throw new Error('Drone model not found');
   }
 

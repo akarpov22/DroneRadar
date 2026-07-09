@@ -4,5 +4,6 @@ type DroneModel {
   manufacturer: String!
   maxSpeed: Float
   maxRange: Float!
+  active: Boolean!
   drones: [Drone!]!
 }

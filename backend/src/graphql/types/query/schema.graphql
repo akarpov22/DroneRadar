@@ -3,7 +3,7 @@ type Query {
   drones: [Drone!]!
   myDrones: [Drone!]!
   drone(id: ID!): Drone!
-  droneModels: [DroneModel!]!
+  droneModels(activeOnly: Boolean = true): [DroneModel!]!
   droneModel(id: ID!): DroneModel!
   droneSessions: [DroneSession!]!
   droneSession(id: ID!): DroneSession!
@@ -11,7 +11,7 @@ type Query {
   operator(id: ID!): Operator!
   positions: [Position!]!
   position(id: ID!): Position!
-  regions: [Region!]!
+  regions(activeOnly: Boolean = true): [Region!]!
   region(id: ID!): Region!
   flightRestrictionZones(
     west: Float!

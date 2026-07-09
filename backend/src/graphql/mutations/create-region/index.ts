@@ -10,6 +10,12 @@ export const createRegion: MutationResolvers['createRegion'] = async (_, { input
   });
 
   if (existing) {
+    if (!existing.active) {
+      return ctx.prisma.region.update({
+        where: { id: existing.id },
+        data: { name: input.name, active: true },
+      });
+    }
     return existing;
   }
 

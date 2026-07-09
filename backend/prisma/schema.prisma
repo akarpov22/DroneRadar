@@ -97,6 +97,7 @@ model DroneModel {
   manufacturer String
   maxSpeed     Float?
   maxRange     Float
+  active       Boolean  @default(true)
   // drones       Drone[]
 }
 
@@ -104,6 +105,7 @@ model Region {
   id         String   @id @default(uuid())
   name       String
   regionCode String   @unique
+  active     Boolean  @default(true)
   // sessions   DroneSession[]
 }
 

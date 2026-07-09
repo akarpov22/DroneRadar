@@ -16,6 +16,9 @@ import { unlinkDrone } from "../mutations/unlink-drone";
 import { updateUserRole } from "../mutations/update-user-role";
 import { deleteUser } from "../mutations/delete-user";
 
+import { deactivateDroneModel } from "../mutations/deactivate-drone-model";
+import { deactivateRegion } from "../mutations/deactivate-region";
+
 export const mutationResolvers: MutationResolvers = {
     registerDrone,
     registerDroneIfNotExists,
@@ -33,4 +36,6 @@ export const mutationResolvers: MutationResolvers = {
     unlinkDrone,
     updateUserRole,
     deleteUser,
+    deactivateDroneModel,
+    deactivateRegion,
 }

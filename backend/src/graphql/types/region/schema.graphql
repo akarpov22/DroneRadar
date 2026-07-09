@@ -2,5 +2,6 @@ type Region {
   id: ID!
   name: String!
   regionCode: String!
+  active: Boolean!
   sessions: [DroneSession!]!
 }

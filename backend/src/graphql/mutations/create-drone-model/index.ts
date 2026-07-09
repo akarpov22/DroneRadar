@@ -1,6 +1,8 @@
-import { MutationResolvers } from "../../../generated/schema";
+import { UserRole } from '@prisma/client';
+import { MutationResolvers } from '../../../generated/schema';
+import { requireRole } from '../../../auth/guards';
 
-export const createDroneModel: MutationResolvers['createDroneModel'] = async (_, { input }, { prisma }) => {
-    const model = await prisma.droneModel.create({ data: input });
-    return model;
-}
+export const createDroneModel: MutationResolvers['createDroneModel'] = async (_, { input }, ctx) => {
+  requireRole(ctx, [UserRole.ADMIN]);
+  return ctx.prisma.droneModel.create({ data: input });
+};

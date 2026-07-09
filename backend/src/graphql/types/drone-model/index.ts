@@ -6,5 +6,6 @@ export const droneModelResolvers: DroneModelResolvers = {
     manufacturer: (parent) => parent.manufacturer,
     maxRange: (parent) => parent.maxRange,
     maxSpeed: (parent) => parent.maxSpeed ?? null,
+    active: (parent) => parent.active,
     drones: (parent, _, {prisma}) => prisma.drone.findMany({where: {modelId: parent.id}})
 }

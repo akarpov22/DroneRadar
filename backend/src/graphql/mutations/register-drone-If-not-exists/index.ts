@@ -2,6 +2,18 @@ import { MutationResolvers } from "../../../generated/schema";
 
 export const registerDroneIfNotExists: MutationResolvers['registerDroneIfNotExists'] = async (_, { input }, { prisma }) => {
       const { serial, name, regionCode, modelId, operatorId } = input;
+
+      const region = await prisma.region.findUnique({ where: { regionCode } });
+      if (!region || !region.active) {
+        throw new Error("Region not found");
+      }
+
+      if (modelId) {
+        const model = await prisma.droneModel.findUnique({ where: { id: modelId } });
+        if (!model || !model.active) {
+          throw new Error('Drone model not found');
+        }
+      }
   
       let drone = await prisma.drone.findUnique({ where: { serial } });
   
@@ -14,11 +26,6 @@ export const registerDroneIfNotExists: MutationResolvers['registerDroneIfNotExis
             operatorId
           },
         });
-      }
-  
-      const region = await prisma.region.findUnique({ where: { regionCode } });
-      if (!region) {
-        throw new Error("Region not found");
       }
   
       const activeSession = await prisma.droneSession.findFirst({

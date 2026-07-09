@@ -17,7 +17,15 @@ export const queryResolvers: QueryResolvers = {
         if (!drone) throw new Error('Drone not found');
         return drone;
     },
-    droneModels: (_, __, { prisma }) => prisma.droneModel.findMany(),
+    droneModels: (_, { activeOnly }, ctx) => {
+        if (activeOnly === false) {
+            requireRole(ctx, [UserRole.ADMIN]);
+        }
+        return ctx.prisma.droneModel.findMany({
+            where: activeOnly === false ? undefined : { active: true },
+            orderBy: [{ manufacturer: 'asc' }, { name: 'asc' }],
+        });
+    },
     droneModel: async (_, { id }, { prisma }) => {
         const model = await prisma.droneModel.findUnique({ where: { id } });
         if (!model) throw new Error('Drone model not found');
@@ -49,7 +57,15 @@ export const queryResolvers: QueryResolvers = {
         if (!position) throw new Error('Position not found');
         return position;
     },
-    regions: (_, __, { prisma }) => prisma.region.findMany(),
+    regions: (_, { activeOnly }, ctx) => {
+        if (activeOnly === false) {
+            requireRole(ctx, [UserRole.ADMIN]);
+        }
+        return ctx.prisma.region.findMany({
+            where: activeOnly === false ? undefined : { active: true },
+            orderBy: { regionCode: 'asc' },
+        });
+    },
     region: async (_, { id }, { prisma }) => {
         const region = await prisma.region.findUnique({
             where: { id },

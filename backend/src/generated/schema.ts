@@ -83,6 +83,7 @@ export type Drone = {
 
 export type DroneModel = {
   __typename?: 'DroneModel';
+  active: Scalars['Boolean']['output'];
   drones: Array<Drone>;
   id: Scalars['ID']['output'];
   manufacturer: Scalars['String']['output'];
@@ -128,6 +129,8 @@ export type Mutation = {
   createRegion: Region;
   createSession: DroneSession;
   createUserZone: UserZone;
+  deactivateDroneModel: DroneModel;
+  deactivateRegion: Region;
   deleteUser: Scalars['Boolean']['output'];
   deleteUserZone: Scalars['Boolean']['output'];
   endSession: DroneSession;
@@ -176,6 +179,16 @@ export type MutationCreateSessionArgs = {
 
 export type MutationCreateUserZoneArgs = {
   input: CreateUserZoneInput;
+};
+
+
+export type MutationDeactivateDroneModelArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeactivateRegionArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -271,6 +284,11 @@ export type QueryDroneModelArgs = {
 };
 
 
+export type QueryDroneModelsArgs = {
+  activeOnly?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+
 export type QueryDroneSessionArgs = {
   id: Scalars['ID']['input'];
 };
@@ -300,12 +318,18 @@ export type QueryRegionArgs = {
 };
 
 
+export type QueryRegionsArgs = {
+  activeOnly?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+
 export type QueryUsersArgs = {
   search?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type Region = {
   __typename?: 'Region';
+  active: Scalars['Boolean']['output'];
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
   regionCode: Scalars['String']['output'];
@@ -532,6 +556,7 @@ export type DroneResolvers<ContextType = Context, ParentType extends ResolversPa
 };
 
 export type DroneModelResolvers<ContextType = Context, ParentType extends ResolversParentTypes['DroneModel'] = ResolversParentTypes['DroneModel']> = {
+  active?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   drones?: Resolver<Array<ResolversTypes['Drone']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   manufacturer?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -577,6 +602,8 @@ export type MutationResolvers<ContextType = Context, ParentType extends Resolver
   createRegion?: Resolver<ResolversTypes['Region'], ParentType, ContextType, RequireFields<MutationCreateRegionArgs, 'input'>>;
   createSession?: Resolver<ResolversTypes['DroneSession'], ParentType, ContextType, RequireFields<MutationCreateSessionArgs, 'input'>>;
   createUserZone?: Resolver<ResolversTypes['UserZone'], ParentType, ContextType, RequireFields<MutationCreateUserZoneArgs, 'input'>>;
+  deactivateDroneModel?: Resolver<ResolversTypes['DroneModel'], ParentType, ContextType, RequireFields<MutationDeactivateDroneModelArgs, 'id'>>;
+  deactivateRegion?: Resolver<ResolversTypes['Region'], ParentType, ContextType, RequireFields<MutationDeactivateRegionArgs, 'id'>>;
   deleteUser?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteUserArgs, 'userId'>>;
   deleteUserZone?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteUserZoneArgs, 'id'>>;
   endSession?: Resolver<ResolversTypes['DroneSession'], ParentType, ContextType, RequireFields<MutationEndSessionArgs, 'input'>>;
@@ -610,7 +637,7 @@ export type PositionResolvers<ContextType = Context, ParentType extends Resolver
 export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
   drone?: Resolver<ResolversTypes['Drone'], ParentType, ContextType, RequireFields<QueryDroneArgs, 'id'>>;
   droneModel?: Resolver<ResolversTypes['DroneModel'], ParentType, ContextType, RequireFields<QueryDroneModelArgs, 'id'>>;
-  droneModels?: Resolver<Array<ResolversTypes['DroneModel']>, ParentType, ContextType>;
+  droneModels?: Resolver<Array<ResolversTypes['DroneModel']>, ParentType, ContextType, RequireFields<QueryDroneModelsArgs, 'activeOnly'>>;
   droneSession?: Resolver<ResolversTypes['DroneSession'], ParentType, ContextType, RequireFields<QueryDroneSessionArgs, 'id'>>;
   droneSessions?: Resolver<Array<ResolversTypes['DroneSession']>, ParentType, ContextType>;
   drones?: Resolver<Array<ResolversTypes['Drone']>, ParentType, ContextType>;
@@ -622,12 +649,13 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   position?: Resolver<ResolversTypes['Position'], ParentType, ContextType, RequireFields<QueryPositionArgs, 'id'>>;
   positions?: Resolver<Array<ResolversTypes['Position']>, ParentType, ContextType>;
   region?: Resolver<ResolversTypes['Region'], ParentType, ContextType, RequireFields<QueryRegionArgs, 'id'>>;
-  regions?: Resolver<Array<ResolversTypes['Region']>, ParentType, ContextType>;
+  regions?: Resolver<Array<ResolversTypes['Region']>, ParentType, ContextType, RequireFields<QueryRegionsArgs, 'activeOnly'>>;
   userZones?: Resolver<Array<ResolversTypes['UserZone']>, ParentType, ContextType>;
   users?: Resolver<Array<ResolversTypes['User']>, ParentType, ContextType, Partial<QueryUsersArgs>>;
 };
 
 export type RegionResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Region'] = ResolversParentTypes['Region']> = {
+  active?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   regionCode?: Resolver<ResolversTypes['String'], ParentType, ContextType>;

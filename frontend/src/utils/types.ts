@@ -30,9 +30,35 @@ export type Drone = {
     serial: string | null;
     model: Model;
     operator: string;
+    alertStatus?: AlertStatus;
     createdAt: string;
     sessions: Session[]
   };
+
+export type AlertStatus = 'GREEN' | 'YELLOW' | 'RED';
+
+export type AlertKind =
+  | 'DRONE_PROXIMITY'
+  | 'ZONE_APPROACH'
+  | 'ZONE_ENTER'
+  | 'COLLISION_ALTITUDE'
+  | 'CLEARED';
+
+export type AlertSeverity = 'YELLOW' | 'RED' | 'GREEN';
+
+export type DroneNotification = {
+  id: string;
+  droneId: string;
+  droneName: string;
+  kind: AlertKind;
+  severity: AlertSeverity;
+  message: string;
+  relatedDroneId: string | null;
+  relatedDroneName: string | null;
+  zoneId: string | null;
+  zoneName: string | null;
+  createdAt: string;
+};
 
   export type Model = {
     id: string;

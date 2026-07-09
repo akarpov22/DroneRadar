@@ -1,0 +1,3 @@
+export const DRONE_PROXIMITY_METERS = 50;
+export const ZONE_APPROACH_METERS = 100;
+export const COLLISION_HORIZONTAL_METERS = 5;

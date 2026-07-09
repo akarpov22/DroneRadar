@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { pubsub } from '../context';
+import { getAlertStatus } from '../services/drone-alert-service';
 
 const SUBSCRIPTION_POSITION_LIMIT = 1;
 
@@ -28,6 +29,7 @@ export async function publishDroneUpdated(prisma: PrismaClient, droneId: string)
   await pubsub.publish('DRONE_UPDATED', {
     droneUpdated: {
       ...drone,
+      alertStatus: getAlertStatus(droneId),
       sessions,
     },
   });

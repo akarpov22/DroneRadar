@@ -2,6 +2,7 @@ import { Heading, useBreakpointValue, VStack, Box, Button } from "@chakra-ui/rea
 import { useTranslation } from "react-i18next"
 import { UserZonesSidebar } from "../user-zones-sidebar"
 import { DroneList } from "./drone-list"
+import { NotificationCenter } from "../notification-center"
 import { useDroneSelection } from "../drone-selection-provider"
 
 export const DroneMenu = () => {
@@ -20,6 +21,12 @@ export const DroneMenu = () => {
             <Box flex={1} minH={0} overflowY="auto" px={2} w="100%">
                 <DroneList />
             </Box>
+
+            {canManageDrones && (
+                <Box px={2} flexShrink={0}>
+                    <NotificationCenter />
+                </Box>
+            )}
 
             {canManageDrones && (
                 <Button

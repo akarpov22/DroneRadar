@@ -1,0 +1,33 @@
+enum AlertSeverity {
+  YELLOW
+  RED
+  GREEN
+}
+
+enum AlertKind {
+  DRONE_PROXIMITY
+  ZONE_APPROACH
+  ZONE_ENTER
+  COLLISION_ALTITUDE
+  CLEARED
+}
+
+enum AlertStatus {
+  GREEN
+  YELLOW
+  RED
+}
+
+type DroneNotification {
+  id: ID!
+  droneId: ID!
+  droneName: String!
+  kind: AlertKind!
+  severity: AlertSeverity!
+  message: String!
+  relatedDroneId: ID
+  relatedDroneName: String
+  zoneId: ID
+  zoneName: String
+  createdAt: DateTime!
+}

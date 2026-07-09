@@ -21,6 +21,26 @@ export type Scalars = {
   JSONObject: { input: any; output: any; }
 };
 
+export enum AlertKind {
+  Cleared = 'CLEARED',
+  CollisionAltitude = 'COLLISION_ALTITUDE',
+  DroneProximity = 'DRONE_PROXIMITY',
+  ZoneApproach = 'ZONE_APPROACH',
+  ZoneEnter = 'ZONE_ENTER'
+}
+
+export enum AlertSeverity {
+  Green = 'GREEN',
+  Red = 'RED',
+  Yellow = 'YELLOW'
+}
+
+export enum AlertStatus {
+  Green = 'GREEN',
+  Red = 'RED',
+  Yellow = 'YELLOW'
+}
+
 export type AppendPositionInput = {
   altitude: Scalars['Float']['input'];
   droneId: Scalars['String']['input'];
@@ -71,6 +91,7 @@ export type CreateUserZoneInput = {
 
 export type Drone = {
   __typename?: 'Drone';
+  alertStatus: AlertStatus;
   createdAt: Scalars['DateTime']['output'];
   id: Scalars['ID']['output'];
   model?: Maybe<DroneModel>;
@@ -90,6 +111,21 @@ export type DroneModel = {
   maxRange: Scalars['Float']['output'];
   maxSpeed?: Maybe<Scalars['Float']['output']>;
   name: Scalars['String']['output'];
+};
+
+export type DroneNotification = {
+  __typename?: 'DroneNotification';
+  createdAt: Scalars['DateTime']['output'];
+  droneId: Scalars['ID']['output'];
+  droneName: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  kind: AlertKind;
+  message: Scalars['String']['output'];
+  relatedDroneId?: Maybe<Scalars['ID']['output']>;
+  relatedDroneName?: Maybe<Scalars['String']['output']>;
+  severity: AlertSeverity;
+  zoneId?: Maybe<Scalars['ID']['output']>;
+  zoneName?: Maybe<Scalars['String']['output']>;
 };
 
 export type DroneSession = {
@@ -257,6 +293,7 @@ export type Query = {
   drone: Drone;
   droneModel: DroneModel;
   droneModels: Array<DroneModel>;
+  droneNotifications: Array<DroneNotification>;
   droneSession: DroneSession;
   droneSessions: Array<DroneSession>;
   drones: Array<Drone>;
@@ -286,6 +323,11 @@ export type QueryDroneModelArgs = {
 
 export type QueryDroneModelsArgs = {
   activeOnly?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+
+export type QueryDroneNotificationsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -358,6 +400,7 @@ export type RegisterDronePayload = {
 
 export type Subscription = {
   __typename?: 'Subscription';
+  droneNotification: DroneNotification;
   droneUpdated: Drone;
 };
 
@@ -469,6 +512,9 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
+  AlertKind: AlertKind;
+  AlertSeverity: AlertSeverity;
+  AlertStatus: AlertStatus;
   AppendPositionInput: AppendPositionInput;
   AssignModelInput: AssignModelInput;
   AssignOperatorInput: AssignOperatorInput;
@@ -481,11 +527,13 @@ export type ResolversTypes = {
   DateTime: ResolverTypeWrapper<Scalars['DateTime']['output']>;
   Drone: ResolverTypeWrapper<PrismaDrone>;
   DroneModel: ResolverTypeWrapper<PrismaDroneModel>;
+  DroneNotification: ResolverTypeWrapper<DroneNotification>;
   DroneSession: ResolverTypeWrapper<PrismaDroneSession>;
   EndSessionInput: EndSessionInput;
   FlightRestrictionZone: ResolverTypeWrapper<FlightRestrictionZone>;
   Float: ResolverTypeWrapper<Scalars['Float']['output']>;
   ID: ResolverTypeWrapper<Scalars['ID']['output']>;
+  Int: ResolverTypeWrapper<Scalars['Int']['output']>;
   JSONObject: ResolverTypeWrapper<Scalars['JSONObject']['output']>;
   Mutation: ResolverTypeWrapper<{}>;
   Operator: ResolverTypeWrapper<PrismaOperator>;
@@ -518,11 +566,13 @@ export type ResolversParentTypes = {
   DateTime: Scalars['DateTime']['output'];
   Drone: PrismaDrone;
   DroneModel: PrismaDroneModel;
+  DroneNotification: DroneNotification;
   DroneSession: PrismaDroneSession;
   EndSessionInput: EndSessionInput;
   FlightRestrictionZone: FlightRestrictionZone;
   Float: Scalars['Float']['output'];
   ID: Scalars['ID']['output'];
+  Int: Scalars['Int']['output'];
   JSONObject: Scalars['JSONObject']['output'];
   Mutation: {};
   Operator: PrismaOperator;
@@ -544,6 +594,7 @@ export interface DateTimeScalarConfig extends GraphQLScalarTypeConfig<ResolversT
 }
 
 export type DroneResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Drone'] = ResolversParentTypes['Drone']> = {
+  alertStatus?: Resolver<ResolversTypes['AlertStatus'], ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   model?: Resolver<Maybe<ResolversTypes['DroneModel']>, ParentType, ContextType>;
@@ -563,6 +614,21 @@ export type DroneModelResolvers<ContextType = Context, ParentType extends Resolv
   maxRange?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   maxSpeed?: Resolver<Maybe<ResolversTypes['Float']>, ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type DroneNotificationResolvers<ContextType = Context, ParentType extends ResolversParentTypes['DroneNotification'] = ResolversParentTypes['DroneNotification']> = {
+  createdAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
+  droneId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  droneName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  kind?: Resolver<ResolversTypes['AlertKind'], ParentType, ContextType>;
+  message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  relatedDroneId?: Resolver<Maybe<ResolversTypes['ID']>, ParentType, ContextType>;
+  relatedDroneName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  severity?: Resolver<ResolversTypes['AlertSeverity'], ParentType, ContextType>;
+  zoneId?: Resolver<Maybe<ResolversTypes['ID']>, ParentType, ContextType>;
+  zoneName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -638,6 +704,7 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   drone?: Resolver<ResolversTypes['Drone'], ParentType, ContextType, RequireFields<QueryDroneArgs, 'id'>>;
   droneModel?: Resolver<ResolversTypes['DroneModel'], ParentType, ContextType, RequireFields<QueryDroneModelArgs, 'id'>>;
   droneModels?: Resolver<Array<ResolversTypes['DroneModel']>, ParentType, ContextType, RequireFields<QueryDroneModelsArgs, 'activeOnly'>>;
+  droneNotifications?: Resolver<Array<ResolversTypes['DroneNotification']>, ParentType, ContextType, RequireFields<QueryDroneNotificationsArgs, 'limit'>>;
   droneSession?: Resolver<ResolversTypes['DroneSession'], ParentType, ContextType, RequireFields<QueryDroneSessionArgs, 'id'>>;
   droneSessions?: Resolver<Array<ResolversTypes['DroneSession']>, ParentType, ContextType>;
   drones?: Resolver<Array<ResolversTypes['Drone']>, ParentType, ContextType>;
@@ -669,6 +736,7 @@ export type RegisterDronePayloadResolvers<ContextType = Context, ParentType exte
 };
 
 export type SubscriptionResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Subscription'] = ResolversParentTypes['Subscription']> = {
+  droneNotification?: SubscriptionResolver<ResolversTypes['DroneNotification'], "droneNotification", ParentType, ContextType>;
   droneUpdated?: SubscriptionResolver<ResolversTypes['Drone'], "droneUpdated", ParentType, ContextType>;
 };
 
@@ -695,6 +763,7 @@ export type Resolvers<ContextType = Context> = {
   DateTime?: GraphQLScalarType;
   Drone?: DroneResolvers<ContextType>;
   DroneModel?: DroneModelResolvers<ContextType>;
+  DroneNotification?: DroneNotificationResolvers<ContextType>;
   DroneSession?: DroneSessionResolvers<ContextType>;
   FlightRestrictionZone?: FlightRestrictionZoneResolvers<ContextType>;
   JSONObject?: GraphQLScalarType;

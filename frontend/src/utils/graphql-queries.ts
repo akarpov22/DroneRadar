@@ -6,6 +6,7 @@ export const MY_DRONES = gql`
       id
       name
       serial
+      alertStatus
       model {
         id
         name
@@ -76,6 +77,7 @@ export const DRONE_UPDATED = gql`
       id
       name
       serial
+      alertStatus
       sessions {
         id
         startedAt
@@ -90,6 +92,42 @@ export const DRONE_UPDATED = gql`
           recordedAt
         }
       }
+    }
+  }
+`;
+
+export const DRONE_NOTIFICATION = gql`
+  subscription DroneNotification {
+    droneNotification {
+      id
+      droneId
+      droneName
+      kind
+      severity
+      message
+      relatedDroneId
+      relatedDroneName
+      zoneId
+      zoneName
+      createdAt
+    }
+  }
+`;
+
+export const DRONE_NOTIFICATIONS = gql`
+  query DroneNotifications($limit: Int) {
+    droneNotifications(limit: $limit) {
+      id
+      droneId
+      droneName
+      kind
+      severity
+      message
+      relatedDroneId
+      relatedDroneName
+      zoneId
+      zoneName
+      createdAt
     }
   }
 `;

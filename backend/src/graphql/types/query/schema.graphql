@@ -22,4 +22,5 @@ type Query {
   ): [FlightRestrictionZone!]!
   userZones: [UserZone!]!
   users(search: String): [User!]!
+  droneNotifications(limit: Int = 50): [DroneNotification!]!
 }

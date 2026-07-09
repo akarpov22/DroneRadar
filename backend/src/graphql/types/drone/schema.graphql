@@ -5,6 +5,7 @@ type Drone {
   model: DroneModel
   operator: Operator
   pilot: User
+  alertStatus: AlertStatus!
   createdAt: DateTime!
   sessions: [DroneSession!]!
 }

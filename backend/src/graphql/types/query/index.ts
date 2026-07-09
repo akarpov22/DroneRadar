@@ -4,12 +4,22 @@ import { requireAuth, requireRole } from "../../../auth/guards";
 import { getFlightZonesByBbox } from "../../../services/flight-zones-db";
 import { listUserZones } from "../../../services/user-zones";
 import { listUsers } from "../../../services/admin-users";
+import {
+  filterNotificationsForUser,
+  getNotificationHistory,
+} from "../../../services/drone-alert-service";
 
 export const queryResolvers: QueryResolvers = {
     me: (_, __, ctx) => requireAuth(ctx),
     drones: (_, __, { prisma }) => prisma.drone.findMany(),
     myDrones: (_, __, ctx) => {
         const user = requireRole(ctx, [UserRole.ADMIN, UserRole.PILOT]);
+        if (user.role === UserRole.ADMIN) {
+            return ctx.prisma.drone.findMany({
+                where: { pilotId: { not: null } },
+                orderBy: { name: 'asc' },
+            });
+        }
         return ctx.prisma.drone.findMany({ where: { pilotId: user.id } });
     },
     drone: async (_, { id }, { prisma }) => {
@@ -83,6 +93,16 @@ export const queryResolvers: QueryResolvers = {
     users: async (_, { search }, ctx) => {
         requireRole(ctx, [UserRole.ADMIN]);
         return listUsers(ctx.prisma, search);
+    },
+    droneNotifications: (_, { limit }, ctx) => {
+        const user = requireRole(ctx, [UserRole.ADMIN, UserRole.PILOT]);
+        const max = Math.min(limit ?? 50, 100);
+        const history = getNotificationHistory().slice(0, max);
+        return filterNotificationsForUser(
+          history,
+          user.id,
+          user.role === UserRole.ADMIN ? UserRole.ADMIN : UserRole.PILOT,
+        );
     },
 }
 

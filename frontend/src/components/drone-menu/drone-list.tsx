@@ -2,6 +2,7 @@ import {
   Box,
   Button,
   Collapse,
+  HStack,
   Text,
   VStack,
 } from '@chakra-ui/react';
@@ -9,9 +10,11 @@ import { useQuery } from '@apollo/client';
 import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
 import { MY_DRONES } from '../../utils/graphql-queries';
-import type { Drone } from '../../utils/types';
+import type { AlertStatus, Drone } from '../../utils/types';
 import { getDroneSnapshot } from '../../utils/drone-store';
 import { useDroneSelection } from '../drone-selection-provider';
+import { useDroneNotifications } from '../drone-notification-provider';
+import { alertStatusColor } from '../../utils/notifications';
 import { DroneDetailsModal } from './drone-details-modal';
 
 function resolveDrone(drone: Drone): Drone {
@@ -23,6 +26,7 @@ export const DroneList = () => {
   const [listOpen, setListOpen] = useState(true);
   const [detailsDrone, setDetailsDrone] = useState<Drone | null>(null);
   const { selectedDrone, setSelectedDrone, canManageDrones } = useDroneSelection();
+  const { alertStatusByDroneId } = useDroneNotifications();
 
   const { data, loading } = useQuery<{ myDrones: Drone[] }>(MY_DRONES, {
     skip: !canManageDrones,
@@ -80,6 +84,8 @@ export const DroneList = () => {
             <VStack align="stretch" spacing={1}>
               {drones.map((drone) => {
                 const isSelected = selectedDrone?.id === drone.id;
+                const status: AlertStatus =
+                  alertStatusByDroneId[drone.id] ?? drone.alertStatus ?? 'GREEN';
                 return (
                   <Button
                     key={drone.id}
@@ -94,16 +100,27 @@ export const DroneList = () => {
                     textAlign="left"
                     onClick={() => handleDroneClick(drone)}
                   >
-                    <Box>
-                      <Text fontSize="sm" fontWeight="normal">
-                        {drone.name}
-                      </Text>
-                      {drone.serial && (
-                        <Text fontSize="xs" color={isSelected ? 'blue.100' : 'gray.500'}>
-                          {drone.serial}
+                    <HStack align="start" spacing={2} w="100%">
+                      <Box
+                        as="span"
+                        mt="6px"
+                        boxSize="10px"
+                        borderRadius="full"
+                        bg={alertStatusColor(status)}
+                        flexShrink={0}
+                        aria-label={status}
+                      />
+                      <Box flex={1} minW={0}>
+                        <Text fontSize="sm" fontWeight="normal">
+                          {drone.name}
                         </Text>
-                      )}
-                    </Box>
+                        {drone.serial && (
+                          <Text fontSize="xs" color={isSelected ? 'blue.100' : 'gray.500'}>
+                            {drone.serial}
+                          </Text>
+                        )}
+                      </Box>
+                    </HStack>
                   </Button>
                 );
               })}

@@ -53,6 +53,8 @@ async function connectPgListener(): Promise<void> {
     try {
       const { droneId } = JSON.parse(msg.payload) as { droneId?: string };
       if (droneId) {
+        const { evaluateDroneAlerts } = await import('../services/drone-alert-service');
+        await evaluateDroneAlerts(prisma, droneId);
         await publishDroneUpdated(prisma, droneId);
       }
     } catch (err) {

@@ -1,4 +1,5 @@
 export const ROLES_CLAIM = 'https://droneradar/roles';
+export const EMAIL_CLAIM = 'https://droneradar/email';
 
 export function isAuth0Disabled(): boolean {
   return process.env.AUTH0_DISABLED === 'true';

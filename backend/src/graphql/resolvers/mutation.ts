@@ -13,6 +13,8 @@ import { createUserZone } from "../mutations/create-user-zone";
 import { updateUserZone } from "../mutations/update-user-zone";
 import { deleteUserZone } from "../mutations/delete-user-zone";
 import { unlinkDrone } from "../mutations/unlink-drone";
+import { updateUserRole } from "../mutations/update-user-role";
+import { deleteUser } from "../mutations/delete-user";
 
 export const mutationResolvers: MutationResolvers = {
     registerDrone,
@@ -29,4 +31,6 @@ export const mutationResolvers: MutationResolvers = {
     updateUserZone,
     deleteUserZone,
     unlinkDrone,
+    updateUserRole,
+    deleteUser,
 }

@@ -14,13 +14,14 @@ enum UserRole {
 }
 
 model User {
-  id        String     @id @default(uuid())
-  auth0Sub  String     @unique
-  email     String?
-  role      UserRole   @default(OBSERVER)
-  drones    Drone[]
-  userZones UserZone[]
-  createdAt DateTime   @default(now())
+  id                    String     @id @default(uuid())
+  auth0Sub              String     @unique
+  email                 String?
+  role                  UserRole   @default(OBSERVER)
+  roleOverriddenByAdmin Boolean    @default(false)
+  drones                Drone[]
+  userZones             UserZone[]
+  createdAt             DateTime   @default(now())
 }
 
 enum UserZoneShape {

@@ -1,6 +1,6 @@
 import { createRemoteJWKSet, jwtVerify, JWTPayload } from 'jose';
 import { UserRole } from '@prisma/client';
-import { getAuth0Config, isAuth0Disabled, ROLES_CLAIM } from './config';
+import { getAuth0Config, isAuth0Disabled, EMAIL_CLAIM, ROLES_CLAIM } from './config';
 
 const roleMap: Record<string, UserRole> = {
   admin: UserRole.ADMIN,
@@ -14,6 +14,25 @@ export type AuthPayload = {
   roles: UserRole[];
 };
 
+function extractEmail(payload: JWTPayload): string | undefined {
+  if (typeof payload.email === 'string') return payload.email;
+  const custom = payload[EMAIL_CLAIM];
+  if (typeof custom === 'string') return custom;
+  return undefined;
+}
+
+async function fetchUserInfoEmail(token: string, domain: string): Promise<string | undefined> {
+  try {
+    const res = await fetch(`https://${domain}/userinfo`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) return undefined;
+    const data = (await res.json()) as { email?: unknown };
+    return typeof data.email === 'string' ? data.email : undefined;
+  } catch {
+    return undefined;
+  }
+}
 function extractRoles(payload: JWTPayload): UserRole[] {
   const raw = payload[ROLES_CLAIM];
   const names = Array.isArray(raw) ? raw : [];
@@ -53,9 +72,14 @@ export async function verifyAccessToken(token: string): Promise<AuthPayload | nu
     audience: config.audience,
   });
 
+  let email = extractEmail(payload);
+  if (!email) {
+    email = await fetchUserInfoEmail(token, config.domain);
+  }
+
   return {
     sub: String(payload.sub),
-    email: typeof payload.email === 'string' ? payload.email : undefined,
+    email,
     roles: extractRoles(payload),
   };
 }

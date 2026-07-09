@@ -3,6 +3,7 @@ import { QueryResolvers } from "../../../generated/schema";
 import { requireAuth, requireRole } from "../../../auth/guards";
 import { getFlightZonesByBbox } from "../../../services/flight-zones-db";
 import { listUserZones } from "../../../services/user-zones";
+import { listUsers } from "../../../services/admin-users";
 
 export const queryResolvers: QueryResolvers = {
     me: (_, __, ctx) => requireAuth(ctx),
@@ -62,6 +63,10 @@ export const queryResolvers: QueryResolvers = {
     userZones: (_, __, ctx) => {
         const user = requireRole(ctx, [UserRole.PILOT]);
         return listUserZones(user.id);
+    },
+    users: async (_, { search }, ctx) => {
+        requireRole(ctx, [UserRole.ADMIN]);
+        return listUsers(ctx.prisma, search);
     },
 }
 

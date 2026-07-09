@@ -128,11 +128,13 @@ export type Mutation = {
   createRegion: Region;
   createSession: DroneSession;
   createUserZone: UserZone;
+  deleteUser: Scalars['Boolean']['output'];
   deleteUserZone: Scalars['Boolean']['output'];
   endSession: DroneSession;
   registerDrone: RegisterDronePayload;
   registerDroneIfNotExists: Drone;
   unlinkDrone: Drone;
+  updateUserRole: User;
   updateUserZone: UserZone;
 };
 
@@ -177,6 +179,11 @@ export type MutationCreateUserZoneArgs = {
 };
 
 
+export type MutationDeleteUserArgs = {
+  userId: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteUserZoneArgs = {
   id: Scalars['ID']['input'];
 };
@@ -199,6 +206,12 @@ export type MutationRegisterDroneIfNotExistsArgs = {
 
 export type MutationUnlinkDroneArgs = {
   droneId: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdateUserRoleArgs = {
+  role: UserRole;
+  userId: Scalars['ID']['input'];
 };
 
 
@@ -244,6 +257,7 @@ export type Query = {
   region: Region;
   regions: Array<Region>;
   userZones: Array<UserZone>;
+  users: Array<User>;
 };
 
 
@@ -283,6 +297,11 @@ export type QueryPositionArgs = {
 
 export type QueryRegionArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type QueryUsersArgs = {
+  search?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type Region = {
@@ -326,6 +345,7 @@ export type UpdateUserZoneInput = {
 
 export type User = {
   __typename?: 'User';
+  auth0Sub: Scalars['String']['output'];
   createdAt: Scalars['DateTime']['output'];
   email?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
@@ -557,11 +577,13 @@ export type MutationResolvers<ContextType = Context, ParentType extends Resolver
   createRegion?: Resolver<ResolversTypes['Region'], ParentType, ContextType, RequireFields<MutationCreateRegionArgs, 'input'>>;
   createSession?: Resolver<ResolversTypes['DroneSession'], ParentType, ContextType, RequireFields<MutationCreateSessionArgs, 'input'>>;
   createUserZone?: Resolver<ResolversTypes['UserZone'], ParentType, ContextType, RequireFields<MutationCreateUserZoneArgs, 'input'>>;
+  deleteUser?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteUserArgs, 'userId'>>;
   deleteUserZone?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteUserZoneArgs, 'id'>>;
   endSession?: Resolver<ResolversTypes['DroneSession'], ParentType, ContextType, RequireFields<MutationEndSessionArgs, 'input'>>;
   registerDrone?: Resolver<ResolversTypes['RegisterDronePayload'], ParentType, ContextType, RequireFields<MutationRegisterDroneArgs, 'input'>>;
   registerDroneIfNotExists?: Resolver<ResolversTypes['Drone'], ParentType, ContextType, RequireFields<MutationRegisterDroneIfNotExistsArgs, 'input'>>;
   unlinkDrone?: Resolver<ResolversTypes['Drone'], ParentType, ContextType, RequireFields<MutationUnlinkDroneArgs, 'droneId'>>;
+  updateUserRole?: Resolver<ResolversTypes['User'], ParentType, ContextType, RequireFields<MutationUpdateUserRoleArgs, 'role' | 'userId'>>;
   updateUserZone?: Resolver<ResolversTypes['UserZone'], ParentType, ContextType, RequireFields<MutationUpdateUserZoneArgs, 'input'>>;
 };
 
@@ -602,6 +624,7 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   region?: Resolver<ResolversTypes['Region'], ParentType, ContextType, RequireFields<QueryRegionArgs, 'id'>>;
   regions?: Resolver<Array<ResolversTypes['Region']>, ParentType, ContextType>;
   userZones?: Resolver<Array<ResolversTypes['UserZone']>, ParentType, ContextType>;
+  users?: Resolver<Array<ResolversTypes['User']>, ParentType, ContextType, Partial<QueryUsersArgs>>;
 };
 
 export type RegionResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Region'] = ResolversParentTypes['Region']> = {
@@ -622,6 +645,7 @@ export type SubscriptionResolvers<ContextType = Context, ParentType extends Reso
 };
 
 export type UserResolvers<ContextType = Context, ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']> = {
+  auth0Sub?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
   email?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;

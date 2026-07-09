@@ -1,5 +1,4 @@
 import {
-  Box,
   Button,
   HStack,
   IconButton,
@@ -30,6 +29,7 @@ import { useTranslation } from 'react-i18next';
 import { LanguageSwitcher } from '../language-switcher';
 import { useDrones } from '../drone-data-provider';
 import { DRONES, MY_DRONES } from '../../utils/graphql-queries';
+import { AdminPanel } from '../admin-panel';
 
 const ME = gql`
   query Me {
@@ -58,6 +58,14 @@ const modalOverlayProps = {
   backdropFilter: 'blur(12px)',
 };
 
+function AdminIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" />
+    </svg>
+  );
+}
+
 function AccountIcon() {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -77,6 +85,7 @@ function AuthOverlayInner({ onLoginModalOpenChange }: AuthOverlayProps) {
   const loginModal = useDisclosure();
   const accountModal = useDisclosure();
   const registerModal = useDisclosure();
+  const adminModal = useDisclosure();
   const toast = useToast();
   const hasAutoOpened = useRef(false);
   const [registerFormKey, setRegisterFormKey] = useState(0);
@@ -91,8 +100,10 @@ function AuthOverlayInner({ onLoginModalOpenChange }: AuthOverlayProps) {
   });
 
   const role = meData?.me?.role;
+  const currentUserId = meData?.me?.id;
   const email = user?.email ?? meData?.me?.email ?? '';
   const canRegisterDrone = role === 'ADMIN' || role === 'PILOT';
+  const isAdmin = role === 'ADMIN';
 
   const roleLabels: Record<string, string> = {
     ADMIN: t('auth-role-admin'),
@@ -185,18 +196,34 @@ function AuthOverlayInner({ onLoginModalOpenChange }: AuthOverlayProps) {
             {t('auth-login')}
           </Button>
         ) : (
-          <IconButton
-            aria-label={t('auth-account')}
-            icon={<AccountIcon />}
-            size="md"
-            isRound
-            bg="whiteAlpha.900"
-            backdropFilter="blur(8px)"
-            shadow="md"
-            color="gray.700"
-            _hover={{ bg: 'white' }}
-            onClick={accountModal.onOpen}
-          />
+          <>
+            {isAdmin && (
+              <IconButton
+                aria-label={t('admin-panel')}
+                icon={<AdminIcon />}
+                size="md"
+                isRound
+                bg="whiteAlpha.900"
+                backdropFilter="blur(8px)"
+                shadow="md"
+                color="gray.700"
+                _hover={{ bg: 'white' }}
+                onClick={adminModal.onOpen}
+              />
+            )}
+            <IconButton
+              aria-label={t('auth-account')}
+              icon={<AccountIcon />}
+              size="md"
+              isRound
+              bg="whiteAlpha.900"
+              backdropFilter="blur(8px)"
+              shadow="md"
+              color="gray.700"
+              _hover={{ bg: 'white' }}
+              onClick={accountModal.onOpen}
+            />
+          </>
         )}
       </HStack>
 
@@ -326,17 +353,53 @@ function AuthOverlayInner({ onLoginModalOpenChange }: AuthOverlayProps) {
           </ModalFooter>
         </ModalContent>
       </Modal>
+
+      <AdminPanel
+        isOpen={adminModal.isOpen}
+        onClose={adminModal.onClose}
+        currentUserId={currentUserId}
+      />
+    </>
+  );
+}
+
+function AuthOverlayDev() {
+  const { t } = useTranslation();
+  const adminModal = useDisclosure();
+  const { data: meData } = useQuery(ME, { fetchPolicy: 'network-only' });
+  const isAdmin = meData?.me?.role === 'ADMIN';
+
+  return (
+    <>
+      <HStack position="absolute" top={3} right={3} zIndex={1000} spacing={2}>
+        <LanguageSwitcher />
+        {isAdmin && (
+          <IconButton
+            aria-label={t('admin-panel')}
+            icon={<AdminIcon />}
+            size="md"
+            isRound
+            bg="whiteAlpha.900"
+            backdropFilter="blur(8px)"
+            shadow="md"
+            color="gray.700"
+            _hover={{ bg: 'white' }}
+            onClick={adminModal.onOpen}
+          />
+        )}
+      </HStack>
+      <AdminPanel
+        isOpen={adminModal.isOpen}
+        onClose={adminModal.onClose}
+        currentUserId={meData?.me?.id}
+      />
     </>
   );
 }
 
 export const AuthOverlay = (props: AuthOverlayProps) => {
   if (isAuth0Disabled) {
-    return (
-      <Box position="absolute" top={3} right={3} zIndex={1000}>
-        <LanguageSwitcher />
-      </Box>
-    );
+    return <AuthOverlayDev />;
   }
   return <AuthOverlayInner {...props} />;
 };

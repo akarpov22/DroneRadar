@@ -21,4 +21,5 @@ type Query {
     includeNotam: Boolean
   ): [FlightRestrictionZone!]!
   userZones: [UserZone!]!
+  users(search: String): [User!]!
 }

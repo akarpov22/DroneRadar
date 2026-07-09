@@ -42,6 +42,8 @@ export type AlertKind =
   | 'ZONE_APPROACH'
   | 'ZONE_ENTER'
   | 'COLLISION_ALTITUDE'
+  | 'USER_ZONE_ENTER'
+  | 'USER_ZONE_EXIT'
   | 'CLEARED';
 
 export type AlertSeverity = 'YELLOW' | 'RED' | 'GREEN';

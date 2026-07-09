@@ -25,6 +25,8 @@ export enum AlertKind {
   Cleared = 'CLEARED',
   CollisionAltitude = 'COLLISION_ALTITUDE',
   DroneProximity = 'DRONE_PROXIMITY',
+  UserZoneEnter = 'USER_ZONE_ENTER',
+  UserZoneExit = 'USER_ZONE_EXIT',
   ZoneApproach = 'ZONE_APPROACH',
   ZoneEnter = 'ZONE_ENTER'
 }

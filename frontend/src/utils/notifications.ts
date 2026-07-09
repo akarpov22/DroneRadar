@@ -20,6 +20,10 @@ export function formatNotificationMessage(
       return t('alert-zone-enter', params);
     case 'COLLISION_ALTITUDE':
       return t('alert-collision-altitude', params);
+    case 'USER_ZONE_ENTER':
+      return t('alert-user-zone-enter', params);
+    case 'USER_ZONE_EXIT':
+      return t('alert-user-zone-exit', params);
     case 'CLEARED':
       return t('alert-cleared', params);
     default:
@@ -74,6 +78,8 @@ export function isAlertKind(value: string): value is AlertKind {
     'ZONE_APPROACH',
     'ZONE_ENTER',
     'COLLISION_ALTITUDE',
+    'USER_ZONE_ENTER',
+    'USER_ZONE_EXIT',
     'CLEARED',
   ].includes(value);
 }

@@ -12,6 +12,7 @@ import {
   AlertStatus,
 } from '../generated/schema';
 import { getFlightZonesByBbox } from './flight-zones-db';
+import { listUserZones } from './user-zones';
 import {
   distanceToZoneBoundaryMeters,
   horizontalDistanceMeters,
@@ -57,6 +58,7 @@ const NOTIFICATION_HISTORY_LIMIT = 100;
 
 const alertStatusByDroneId = new Map<string, AlertStatus>();
 const activeWarningsByDroneId = new Map<string, Set<string>>();
+const userZoneInsideByDroneId = new Map<string, Set<string>>();
 const notificationHistory: DroneNotificationPayload[] = [];
 
 function warningKey(kind: AlertKind, entityId: string): string {
@@ -87,6 +89,10 @@ function buildMessage(warning: ActiveWarning, droneName: string): string {
       return `${droneName} entered zone ${warning.zoneName ?? 'unknown'}`;
     case AlertKind.CollisionAltitude:
       return `${droneName} shares coordinates with ${warning.relatedDroneName ?? 'unknown'} (different altitude)`;
+    case AlertKind.UserZoneEnter:
+      return `${droneName} entered user zone ${warning.zoneName ?? 'unknown'}`;
+    case AlertKind.UserZoneExit:
+      return `${droneName} exited user zone ${warning.zoneName ?? 'unknown'}`;
     case AlertKind.Cleared:
       return `${droneName}: all warnings cleared`;
     default:
@@ -237,6 +243,53 @@ function evaluateDroneWarnings(
   return warnings;
 }
 
+function resolveUserZoneName(name: string | null, zoneId: string): string {
+  return name?.trim() || zoneId;
+}
+
+async function evaluateUserZoneTransitions(
+  drone: { id: string; name: string; pilotId: string | null },
+  target: DronePositionSnapshot,
+  userZones: Awaited<ReturnType<typeof listUserZones>>,
+): Promise<void> {
+  const previousInside = userZoneInsideByDroneId.get(drone.id) ?? new Set<string>();
+  const currentInside = new Set<string>();
+
+  for (const zone of userZones) {
+    if (isPointInZone(target.latitude, target.longitude, zone.geometry)) {
+      currentInside.add(zone.id);
+    }
+  }
+
+  for (const zoneId of currentInside) {
+    if (previousInside.has(zoneId)) continue;
+
+    const zone = userZones.find((item) => item.id === zoneId);
+    await publishNotification(drone, {
+      key: `${AlertKind.UserZoneEnter}:${zoneId}:${Date.now()}`,
+      kind: AlertKind.UserZoneEnter,
+      severity: AlertSeverity.Yellow,
+      zoneId,
+      zoneName: resolveUserZoneName(zone?.name ?? null, zoneId),
+    });
+  }
+
+  for (const zoneId of previousInside) {
+    if (currentInside.has(zoneId)) continue;
+
+    const zone = userZones.find((item) => item.id === zoneId);
+    await publishNotification(drone, {
+      key: `${AlertKind.UserZoneExit}:${zoneId}:${Date.now()}`,
+      kind: AlertKind.UserZoneExit,
+      severity: AlertSeverity.Yellow,
+      zoneId,
+      zoneName: resolveUserZoneName(zone?.name ?? null, zoneId),
+    });
+  }
+
+  userZoneInsideByDroneId.set(drone.id, currentInside);
+}
+
 async function applyWarningTransitions(
   drone: { id: string; name: string; pilotId: string | null },
   nextWarnings: ActiveWarning[],
@@ -286,6 +339,13 @@ export async function evaluateDroneAlerts(
   await applyWarningTransitions(
     { id: drone.id, name: drone.name, pilotId: drone.pilotId },
     warnings,
+  );
+
+  const userZones = await listUserZones(drone.pilotId);
+  await evaluateUserZoneTransitions(
+    { id: drone.id, name: drone.name, pilotId: drone.pilotId },
+    target,
+    userZones,
   );
 }
 

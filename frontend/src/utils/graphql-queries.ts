@@ -1,5 +1,31 @@
 import { gql } from '@apollo/client';
 
+export const MY_DRONES = gql`
+  query MyDrones {
+    myDrones {
+      id
+      name
+      serial
+      model {
+        id
+        name
+        manufacturer
+        maxSpeed
+        maxRange
+      }
+      createdAt
+    }
+  }
+`;
+
+export const UNLINK_DRONE = gql`
+  mutation UnlinkDrone($droneId: ID!) {
+    unlinkDrone(droneId: $droneId) {
+      id
+    }
+  }
+`;
+
 export const DRONES = gql`
   query Drones {
     drones {

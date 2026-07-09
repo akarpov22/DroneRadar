@@ -14,7 +14,8 @@ import { useUserZonesContext } from '../user-zones-provider';
 
 export const OlMap: React.FC = () => {
   const mapRef = useRef<HTMLDivElement>(null);
-  const { selectedDrone, setSelectedDrone, isDisplayOwned } = useDroneSelection();
+  const { selectedDrone, setSelectedDrone, showOnlyMine, myDroneIds, canManageDrones } =
+    useDroneSelection();
 
   const {
     zones: userZones,
@@ -34,8 +35,9 @@ export const OlMap: React.FC = () => {
   } = useUserZonesContext();
 
   const { droneSource, dronePathSource } = useDroneLayers(
-    isDisplayOwned,
     selectedDrone?.id,
+    canManageDrones && showOnlyMine,
+    myDroneIds,
   );
 
   const handleSelectDrone = useCallback(

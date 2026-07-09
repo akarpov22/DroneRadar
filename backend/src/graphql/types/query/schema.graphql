@@ -1,6 +1,7 @@
 type Query {
   me: User
   drones: [Drone!]!
+  myDrones: [Drone!]!
   drone(id: ID!): Drone!
   droneModels: [DroneModel!]!
   droneModel(id: ID!): DroneModel!

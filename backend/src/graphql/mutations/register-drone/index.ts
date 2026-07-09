@@ -1,19 +1,20 @@
 import { UserRole } from '@prisma/client';
 import { MutationResolvers } from '../../../generated/schema';
 import { requireRole } from '../../../auth/guards';
-import { generateDeviceToken, hashDeviceToken } from '../../../auth/device-token';
 
 export const registerDrone: MutationResolvers['registerDrone'] = async (_, { input }, ctx) => {
   const user = requireRole(ctx, [UserRole.ADMIN, UserRole.PILOT]);
-  const { serial, name, regionCode } = input;
+  const { serial, name, regionCode, modelId } = input;
 
   const region = await ctx.prisma.region.findUnique({ where: { regionCode } });
   if (!region) {
     throw new Error('Region not found');
   }
 
-  const deviceToken = generateDeviceToken();
-  const deviceTokenHash = hashDeviceToken(deviceToken);
+  const model = await ctx.prisma.droneModel.findUnique({ where: { id: modelId } });
+  if (!model) {
+    throw new Error('Drone model not found');
+  }
 
   const existing = await ctx.prisma.drone.findUnique({ where: { serial } });
   if (!existing) {
@@ -25,7 +26,8 @@ export const registerDrone: MutationResolvers['registerDrone'] = async (_, { inp
     data: {
       name,
       pilotId: user.id,
-      deviceTokenHash,
+      modelId,
+      deviceTokenHash: null,
     },
   });
 
@@ -39,5 +41,5 @@ export const registerDrone: MutationResolvers['registerDrone'] = async (_, { inp
     });
   }
 
-  return { drone, deviceToken };
+  return { drone };
 };

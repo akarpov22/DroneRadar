@@ -6,9 +6,9 @@ input RegisterDroneInput {
   serial: String!
   name: String!
   regionCode: String!
+  modelId: String!
 }
 
 type RegisterDronePayload {
   drone: Drone!
-  deviceToken: String!
 }

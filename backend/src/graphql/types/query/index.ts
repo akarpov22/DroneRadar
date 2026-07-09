@@ -6,12 +6,10 @@ import { listUserZones } from "../../../services/user-zones";
 
 export const queryResolvers: QueryResolvers = {
     me: (_, __, ctx) => requireAuth(ctx),
-    drones: (_, __, { prisma, user }) => {
-        if (!user) return prisma.drone.findMany();
-        if (user.role === UserRole.ADMIN || user.role === UserRole.OBSERVER) {
-            return prisma.drone.findMany();
-        }
-        return prisma.drone.findMany({ where: { pilotId: user.id } });
+    drones: (_, __, { prisma }) => prisma.drone.findMany(),
+    myDrones: (_, __, ctx) => {
+        const user = requireRole(ctx, [UserRole.ADMIN, UserRole.PILOT]);
+        return ctx.prisma.drone.findMany({ where: { pilotId: user.id } });
     },
     drone: async (_, { id }, { prisma }) => {
         const drone = await prisma.drone.findUnique({ where: { id } });

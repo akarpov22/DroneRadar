@@ -109,27 +109,20 @@ function createDroneStyle(heading: number, selected: boolean): Style {
   });
 }
 
-function getOwnedSerials(): string[] {
-  return JSON.parse(localStorage.getItem('myDrones') ?? '[]');
-}
-
-function isDroneVisible(drone: Drone, isDisplayOwned: boolean, ownedSerials: string[]): boolean {
+function isDroneVisible(drone: Drone): boolean {
   const position = getDroneLatestPosition(drone);
   if (isDroneExpired(position?.recordedAt)) return false;
-  if (isDisplayOwned && drone.serial && !ownedSerials.includes(drone.serial)) return false;
   return true;
 }
 
 export function buildDroneFeatures(
   drones: Drone[],
-  isDisplayOwned: boolean,
   selectedDroneId?: number,
 ): Feature<Point>[] {
-  const ownedSerials = getOwnedSerials();
   const features: Feature<Point>[] = [];
 
   for (const drone of drones) {
-    if (!isDroneVisible(drone, isDisplayOwned, ownedSerials)) continue;
+    if (!isDroneVisible(drone)) continue;
 
     const position = getDroneLatestPosition(drone)!;
     const feature = new Feature({
@@ -150,14 +143,12 @@ export function buildDroneFeatures(
 export function buildDronePathFeature(
   drones: Drone[],
   selectedDroneId: string | undefined,
-  isDisplayOwned: boolean,
   trailEnd?: { longitude: number; latitude: number },
   pathCutoffRecordedAt?: string,
 ): Feature<LineString> | null {
   const coordinates = buildDronePathCoordinates(
     drones,
     selectedDroneId,
-    isDisplayOwned,
     trailEnd,
     pathCutoffRecordedAt,
   );
@@ -176,18 +167,13 @@ export function buildDronePathFeature(
 export function buildDronePathCoordinates(
   drones: Drone[],
   selectedDroneId: string | undefined,
-  isDisplayOwned: boolean,
   trailEnd?: { longitude: number; latitude: number },
   pathCutoffRecordedAt?: string,
 ): number[][] | null {
   if (selectedDroneId == null) return null;
 
-  const ownedSerials = getOwnedSerials();
   const drone = drones.find((d) => d.id === selectedDroneId);
-  if (
-    !drone ||
-    (isDisplayOwned && drone.serial && !ownedSerials.includes(drone.serial))
-  ) {
+  if (!drone) {
     return null;
   }
 

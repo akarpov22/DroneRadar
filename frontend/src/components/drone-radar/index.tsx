@@ -5,10 +5,12 @@ import { DroneMenu } from '../drone-menu';
 import { MobileDroneMenu } from '../mobile-drone-menu';
 import { AuthOverlay } from '../auth-overlay';
 import { useShowSidebar } from '../../auth/use-auth-session';
+import { useUserZonesContext } from '../user-zones-provider';
 import { useEffect, useState } from 'react';
 
 export const DroneRadar = () => {
-  const { selectedDrone } = useDroneSelection();
+  const { selectedDrone, setSelectedDrone } = useDroneSelection();
+  const { interactionActive } = useUserZonesContext();
   const [isOpen, setIsOpen] = useState(false);
   const isDesktop = useBreakpointValue({ base: false, md: true });
   const showSidebar = useShowSidebar();
@@ -19,6 +21,24 @@ export const DroneRadar = () => {
       setIsOpen(true);
     }
   }, [selectedDrone, isDesktop, showSidebar]);
+
+  useEffect(() => {
+    if (!selectedDrone) return;
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') {
+        return;
+      }
+      if (document.querySelector('[role="dialog"][aria-modal="true"]')) return;
+      if (interactionActive) return;
+      setSelectedDrone(undefined);
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [selectedDrone, setSelectedDrone, interactionActive]);
 
   return (
     <HStack w="100%" h="100vh" spacing={0} align="stretch">

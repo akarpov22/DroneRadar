@@ -1,21 +1,70 @@
-import { createContext, Dispatch, SetStateAction, useContext, useState } from "react";
-import { Drone } from "../../utils/types";
+import {
+  createContext,
+  Dispatch,
+  SetStateAction,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
+import { gql, useQuery } from '@apollo/client';
+import { Drone } from '../../utils/types';
+import { MY_DRONES } from '../../utils/graphql-queries';
+
+const ME = gql`
+  query Me {
+    me {
+      role
+    }
+  }
+`;
 
 type DroneSelectionContextProps = {
-  selectedDrone: Drone | undefined,
-  setSelectedDrone: Dispatch<SetStateAction<undefined | Drone>>,
-  isDisplayOwned: boolean,
-  setIsDisplayOwned: Dispatch<SetStateAction<boolean>>
-}
+  selectedDrone: Drone | undefined;
+  setSelectedDrone: Dispatch<SetStateAction<undefined | Drone>>;
+  showOnlyMine: boolean;
+  setShowOnlyMine: Dispatch<SetStateAction<boolean>>;
+  myDroneIds: ReadonlySet<string>;
+  canManageDrones: boolean;
+};
 
 const DroneSelectionContext = createContext<DroneSelectionContextProps | null>(null);
 
 export const DroneSelectionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [selectedDrone, setSelectedDrone] = useState<Drone>();
-  const [isDisplayOwned, setIsDisplayOwned] = useState<boolean>(false);
+  const [showOnlyMine, setShowOnlyMine] = useState(false);
+
+  const { data: meData } = useQuery(ME);
+  const role = meData?.me?.role;
+  const canManageDrones = role === 'ADMIN' || role === 'PILOT';
+
+  const { data: myDronesData } = useQuery<{ myDrones: Drone[] }>(MY_DRONES, {
+    skip: !canManageDrones,
+  });
+
+  const myDroneIds = useMemo(
+    () => new Set((myDronesData?.myDrones ?? []).map((d) => d.id)),
+    [myDronesData],
+  );
+
+  useEffect(() => {
+    if (!showOnlyMine || !selectedDrone) return;
+    if (!myDroneIds.has(selectedDrone.id)) {
+      setSelectedDrone(undefined);
+    }
+  }, [showOnlyMine, selectedDrone, myDroneIds]);
 
   return (
-    <DroneSelectionContext.Provider value={ {selectedDrone, setSelectedDrone, isDisplayOwned, setIsDisplayOwned} } >
+    <DroneSelectionContext.Provider
+      value={{
+        selectedDrone,
+        setSelectedDrone,
+        showOnlyMine,
+        setShowOnlyMine,
+        myDroneIds,
+        canManageDrones,
+      }}
+    >
       {children}
     </DroneSelectionContext.Provider>
   );

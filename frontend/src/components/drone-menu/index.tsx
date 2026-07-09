@@ -1,14 +1,13 @@
-import { Heading, useBreakpointValue, VStack, Button, Box } from "@chakra-ui/react"
+import { Heading, useBreakpointValue, VStack, Box, Button } from "@chakra-ui/react"
 import { useTranslation } from "react-i18next"
-import { useDroneSelection } from "../drone-selection-provider"
-import { EditMenu } from "./edit"
 import { UserZonesSidebar } from "../user-zones-sidebar"
+import { DroneList } from "./drone-list"
+import { useDroneSelection } from "../drone-selection-provider"
 
 export const DroneMenu = () => {
-    const { selectedDrone, isDisplayOwned, setIsDisplayOwned} = useDroneSelection();
     const { t } = useTranslation()
+    const { showOnlyMine, setShowOnlyMine, canManageDrones } = useDroneSelection()
     const isDesktop = useBreakpointValue({ base: false, md: true });
-
 
     return (
         <VStack w={isDesktop?'20%':'100%'} h={'100%'} align="stretch" spacing={0} overflow="hidden">
@@ -19,13 +18,22 @@ export const DroneMenu = () => {
             </Box>
 
             <Box flex={1} minH={0} overflowY="auto" px={2} w="100%">
-                {selectedDrone && <EditMenu drone={selectedDrone}/>}
+                <DroneList />
             </Box>
 
-            {isDesktop &&
-            <Button size={'xs'} mt={'auto'} mb={3} mx={2} flexShrink={0} onClick={() => setIsDisplayOwned(!isDisplayOwned)}>
-                {isDisplayOwned?t('show-all'):t('show-only-owned')}
-            </Button>}
+            {canManageDrones && (
+                <Button
+                    size="xs"
+                    mt="auto"
+                    mb={3}
+                    mx={2}
+                    flexShrink={0}
+                    variant="outline"
+                    onClick={() => setShowOnlyMine((value) => !value)}
+                >
+                    {showOnlyMine ? t('show-all') : t('show-only-owned')}
+                </Button>
+            )}
         </VStack>
     )
 }

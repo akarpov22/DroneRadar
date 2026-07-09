@@ -14,6 +14,7 @@ import {
   FormControl,
   FormLabel,
   Input,
+  Select,
   VStack,
   Code,
   useToast,
@@ -27,6 +28,8 @@ import { useAuthSession } from '../../auth/use-auth-session';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LanguageSwitcher } from '../language-switcher';
+import { useDrones } from '../drone-data-provider';
+import { DRONES, MY_DRONES } from '../../utils/graphql-queries';
 
 const ME = gql`
   query Me {
@@ -77,12 +80,15 @@ function AuthOverlayInner({ onLoginModalOpenChange }: AuthOverlayProps) {
   const toast = useToast();
   const hasAutoOpened = useRef(false);
   const [registerFormKey, setRegisterFormKey] = useState(0);
+  const { models } = useDrones();
 
   const { data: meData } = useQuery(ME, {
     skip: !isAuthenticated || isLoading,
     fetchPolicy: 'network-only',
   });
-  const [registerDrone, { loading: registering }] = useMutation(REGISTER_DRONE);
+  const [registerDrone, { loading: registering }] = useMutation(REGISTER_DRONE, {
+    refetchQueries: [{ query: MY_DRONES }, { query: DRONES }],
+  });
 
   const role = meData?.me?.role;
   const email = user?.email ?? meData?.me?.email ?? '';
@@ -140,10 +146,11 @@ function AuthOverlayInner({ onLoginModalOpenChange }: AuthOverlayProps) {
     const serial = String(form.get('serial') ?? '');
     const name = String(form.get('name') ?? '');
     const regionCode = String(form.get('regionCode') ?? '');
+    const modelId = String(form.get('modelId') ?? '');
 
     try {
       await registerDrone({
-        variables: { input: { serial, name, regionCode } },
+        variables: { input: { serial, name, regionCode, modelId } },
       });
 
       toast({
@@ -295,6 +302,16 @@ function AuthOverlayInner({ onLoginModalOpenChange }: AuthOverlayProps) {
                 <FormControl isRequired>
                   <FormLabel>{t('auth-region-code')}</FormLabel>
                   <Input name="regionCode" />
+                </FormControl>
+                <FormControl isRequired>
+                  <FormLabel>{t('drone-model')}</FormLabel>
+                  <Select name="modelId" placeholder={t('select-model')}>
+                    {models.map((model) => (
+                      <option value={model.id} key={model.id}>
+                        {`${model.manufacturer} ${model.name}`}
+                      </option>
+                    ))}
+                  </Select>
                 </FormControl>
                 <Code fontSize="xs" p={2} w="full">
                   {t('auth-register-drone-hint')}

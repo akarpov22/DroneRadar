@@ -19,14 +19,14 @@ function isDroneExpired(recordedAt?: string): boolean {
   return Date.now() - new Date(recordedAt).getTime() > 60_000;
 }
 
-function getOwnedSerials(): string[] {
-  return JSON.parse(localStorage.getItem('myDrones') ?? '[]');
-}
-
-function isDroneVisible(drone: Drone, isDisplayOwned: boolean, ownedSerials: string[]): boolean {
+function isDroneVisible(
+  drone: Drone,
+  showOnlyMine: boolean,
+  myDroneIds: ReadonlySet<string>,
+): boolean {
   const position = getDroneLatestPosition(drone);
   if (isDroneExpired(position?.recordedAt)) return false;
-  if (isDisplayOwned && drone.serial && !ownedSerials.includes(drone.serial)) return false;
+  if (showOnlyMine && !myDroneIds.has(drone.id)) return false;
   return true;
 }
 
@@ -37,8 +37,9 @@ function getTrailEnd(state: DroneAnimState | undefined, nowMs: number) {
 }
 
 export function useDroneLayers(
-  isDisplayOwned: boolean,
   selectedDroneId?: string,
+  showOnlyMine = false,
+  myDroneIds: ReadonlySet<string> = new Set(),
 ) {
   const [droneSource] = useState<VectorSource<Feature<Point>>>(
     () => new VectorSource({ features: [] }),
@@ -51,10 +52,12 @@ export function useDroneLayers(
   const pathFeatureRef = useRef<Feature<LineString> | null>(null);
   const rafRef = useRef<number | null>(null);
   const selectedDroneIdRef = useRef(selectedDroneId);
-  const isDisplayOwnedRef = useRef(isDisplayOwned);
+  const showOnlyMineRef = useRef(showOnlyMine);
+  const myDroneIdsRef = useRef(myDroneIds);
 
   selectedDroneIdRef.current = selectedDroneId;
-  isDisplayOwnedRef.current = isDisplayOwned;
+  showOnlyMineRef.current = showOnlyMine;
+  myDroneIdsRef.current = myDroneIds;
 
   const stopAnimationLoop = useCallback(() => {
     if (rafRef.current != null) {
@@ -76,7 +79,6 @@ export function useDroneLayers(
     const coordinates = buildDronePathCoordinates(
       getDroneSnapshot(),
       selectedId,
-      isDisplayOwnedRef.current,
       trailEnd,
       animState?.pathCutoffRecordedAt,
     );
@@ -96,7 +98,6 @@ export function useDroneLayers(
     const pathFeature = buildDronePathFeature(
       getDroneSnapshot(),
       selectedId,
-      isDisplayOwnedRef.current,
       trailEnd,
       animState?.pathCutoffRecordedAt,
     );
@@ -148,12 +149,11 @@ export function useDroneLayers(
 
   const syncDroneLayer = useCallback(() => {
     const nowMs = performance.now();
-    const ownedSerials = getOwnedSerials();
     const visibleIds = new Set<string>();
     let startedAnimation = false;
 
     for (const drone of getDroneSnapshot()) {
-      if (!isDroneVisible(drone, isDisplayOwnedRef.current, ownedSerials)) continue;
+      if (!isDroneVisible(drone, showOnlyMineRef.current, myDroneIdsRef.current)) continue;
 
       const position = getDroneLatestPosition(drone)!;
       visibleIds.add(drone.id);
@@ -225,6 +225,11 @@ export function useDroneLayers(
     sync();
     return subscribeDrones(sync);
   }, [syncDroneLayer, syncPathLayer]);
+
+  useEffect(() => {
+    syncDroneLayer();
+    syncPathLayer();
+  }, [showOnlyMine, myDroneIds, syncDroneLayer, syncPathLayer]);
 
   useEffect(() => {
     pathFeatureRef.current = null;

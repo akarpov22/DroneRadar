@@ -132,6 +132,7 @@ export type Mutation = {
   endSession: DroneSession;
   registerDrone: RegisterDronePayload;
   registerDroneIfNotExists: Drone;
+  unlinkDrone: Drone;
   updateUserZone: UserZone;
 };
 
@@ -196,6 +197,11 @@ export type MutationRegisterDroneIfNotExistsArgs = {
 };
 
 
+export type MutationUnlinkDroneArgs = {
+  droneId: Scalars['ID']['input'];
+};
+
+
 export type MutationUpdateUserZoneArgs = {
   input: UpdateUserZoneInput;
 };
@@ -230,6 +236,7 @@ export type Query = {
   drones: Array<Drone>;
   flightRestrictionZones: Array<FlightRestrictionZone>;
   me?: Maybe<User>;
+  myDrones: Array<Drone>;
   operator: Operator;
   operators: Array<Operator>;
   position: Position;
@@ -295,6 +302,7 @@ export type RegisterDroneIfNotExistsInput = {
 };
 
 export type RegisterDroneInput = {
+  modelId: Scalars['String']['input'];
   name: Scalars['String']['input'];
   regionCode: Scalars['String']['input'];
   serial: Scalars['String']['input'];
@@ -302,7 +310,6 @@ export type RegisterDroneInput = {
 
 export type RegisterDronePayload = {
   __typename?: 'RegisterDronePayload';
-  deviceToken: Scalars['String']['output'];
   drone: Drone;
 };
 
@@ -554,6 +561,7 @@ export type MutationResolvers<ContextType = Context, ParentType extends Resolver
   endSession?: Resolver<ResolversTypes['DroneSession'], ParentType, ContextType, RequireFields<MutationEndSessionArgs, 'input'>>;
   registerDrone?: Resolver<ResolversTypes['RegisterDronePayload'], ParentType, ContextType, RequireFields<MutationRegisterDroneArgs, 'input'>>;
   registerDroneIfNotExists?: Resolver<ResolversTypes['Drone'], ParentType, ContextType, RequireFields<MutationRegisterDroneIfNotExistsArgs, 'input'>>;
+  unlinkDrone?: Resolver<ResolversTypes['Drone'], ParentType, ContextType, RequireFields<MutationUnlinkDroneArgs, 'droneId'>>;
   updateUserZone?: Resolver<ResolversTypes['UserZone'], ParentType, ContextType, RequireFields<MutationUpdateUserZoneArgs, 'input'>>;
 };
 
@@ -586,6 +594,7 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   drones?: Resolver<Array<ResolversTypes['Drone']>, ParentType, ContextType>;
   flightRestrictionZones?: Resolver<Array<ResolversTypes['FlightRestrictionZone']>, ParentType, ContextType, RequireFields<QueryFlightRestrictionZonesArgs, 'east' | 'north' | 'south' | 'west'>>;
   me?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
+  myDrones?: Resolver<Array<ResolversTypes['Drone']>, ParentType, ContextType>;
   operator?: Resolver<ResolversTypes['Operator'], ParentType, ContextType, RequireFields<QueryOperatorArgs, 'id'>>;
   operators?: Resolver<Array<ResolversTypes['Operator']>, ParentType, ContextType>;
   position?: Resolver<ResolversTypes['Position'], ParentType, ContextType, RequireFields<QueryPositionArgs, 'id'>>;
@@ -604,7 +613,6 @@ export type RegionResolvers<ContextType = Context, ParentType extends ResolversP
 };
 
 export type RegisterDronePayloadResolvers<ContextType = Context, ParentType extends ResolversParentTypes['RegisterDronePayload'] = ResolversParentTypes['RegisterDronePayload']> = {
-  deviceToken?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   drone?: Resolver<ResolversTypes['Drone'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };

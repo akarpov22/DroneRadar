@@ -18,14 +18,14 @@ function mergeQueryDronesWithLive(prev: Drone[], fromQuery: Drone[]): Drone[] {
 
     const liveLatest = getDroneLatestPosition(live);
     const queryLatest = getDroneLatestPosition(queryDrone);
-    const liveIsNewer = liveLatest && queryLatest
-      && new Date(liveLatest.recordedAt) > new Date(queryLatest.recordedAt);
+    const queryIsNewer = liveLatest && queryLatest
+      && new Date(queryLatest.recordedAt) > new Date(liveLatest.recordedAt);
 
     return {
       ...queryDrone,
       model: queryDrone.model ?? live.model,
       alertStatus: queryDrone.alertStatus ?? live.alertStatus,
-      sessions: liveIsNewer ? live.sessions : queryDrone.sessions,
+      sessions: queryIsNewer ? queryDrone.sessions : live.sessions,
     };
   });
 

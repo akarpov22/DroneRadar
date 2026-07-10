@@ -181,7 +181,7 @@ export function getExtrapolationMs(state: DroneAnimState, nowMs: number): number
 }
 
 export function getInterpolatedPosition(state: DroneAnimState, nowMs: number) {
-  if (isDroneSignalLost(state.pathCutoffRecordedAt)) {
+  if (isDroneSignalLost(state.recordedAt)) {
     return {
       longitude: state.toLon,
       latitude: state.toLat,
@@ -267,6 +267,6 @@ export function setAnimTarget(
 }
 
 export function isAnimating(state: DroneAnimState, nowMs: number): boolean {
-  if (isDroneSignalLost(state.pathCutoffRecordedAt)) return false;
+  if (isDroneSignalLost(state.recordedAt)) return false;
   return getAnimProgress(state, nowMs) < 1 || getExtrapolationMs(state, nowMs) > 0;
 }

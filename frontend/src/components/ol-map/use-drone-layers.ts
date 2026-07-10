@@ -83,7 +83,7 @@ export function useDroneLayers(
     }
 
     const animState = animStatesRef.current.get(selectedId);
-    if (!animState || !isDroneSignalLost(animState.pathCutoffRecordedAt)) {
+    if (!animState || !isDroneSignalLost(animState.recordedAt)) {
       droneFallCircleSource.clear();
       fallCircleFeatureRef.current = null;
       return;
@@ -156,7 +156,7 @@ export function useDroneLayers(
 
   const refreshDroneStyles = useCallback((nowMs: number) => {
     for (const state of animStatesRef.current.values()) {
-      const lostSignal = isDroneSignalLost(state.pathCutoffRecordedAt);
+      const lostSignal = isDroneSignalLost(state.recordedAt);
       const { longitude, latitude, heading } = getInterpolatedPosition(state, nowMs);
       state.feature.getGeometry()?.setCoordinates(fromLonLat([longitude, latitude]));
       applyDroneFeatureStyle(
@@ -174,7 +174,7 @@ export function useDroneLayers(
     let selectedAnimating = false;
 
     for (const state of animStatesRef.current.values()) {
-      const lostSignal = isDroneSignalLost(state.pathCutoffRecordedAt);
+      const lostSignal = isDroneSignalLost(state.recordedAt);
       const { longitude, latitude, heading } = getInterpolatedPosition(state, nowMs);
       state.feature.getGeometry()?.setCoordinates(fromLonLat([longitude, latitude]));
       applyDroneFeatureStyle(
@@ -227,7 +227,7 @@ export function useDroneLayers(
           setAnimTarget(existing, position, nowMs);
           startedAnimation = true;
         }
-        const lostSignal = isDroneSignalLost(existing.pathCutoffRecordedAt);
+        const lostSignal = isDroneSignalLost(existing.recordedAt);
         applyDroneFeatureStyle(
           existing.feature,
           existing.toHeading,

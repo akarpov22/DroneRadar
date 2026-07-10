@@ -14,24 +14,26 @@ export const DroneMenu = () => {
         <VStack w={isDesktop?'20%':'100%'} h={'100%'} align="stretch" spacing={0} overflow="hidden">
             <Heading w="100%" flexShrink={0} px={2} pt={2}>Drone Radar</Heading>
 
-            <Box flexShrink={0} px={2}>
+            <Box flexShrink={0} px={2} overflow="hidden">
                 <UserZonesSidebar />
             </Box>
 
-            <Box flex={1} minH={0} overflowY="auto" px={2} w="100%">
+            <Box
+                flex={1}
+                minH={0}
+                px={2}
+                w="100%"
+                display="flex"
+                flexDirection="column"
+                overflow="hidden"
+            >
                 <DroneList />
+                {canManageDrones && <NotificationCenter />}
             </Box>
-
-            {canManageDrones && (
-                <Box px={2} flexShrink={0}>
-                    <NotificationCenter />
-                </Box>
-            )}
 
             {canManageDrones && (
                 <Button
                     size="xs"
-                    mt="auto"
                     mb={3}
                     mx={2}
                     flexShrink={0}

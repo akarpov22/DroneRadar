@@ -1,7 +1,6 @@
 import {
   Box,
   Button,
-  Collapse,
   HStack,
   Text,
   VStack,
@@ -49,11 +48,15 @@ export const DroneList = () => {
     <>
       <Box
         w="100%"
+        flex={listOpen ? 1 : '0 0 auto'}
+        minH={0}
+        display="flex"
+        flexDirection="column"
+        overflow="hidden"
         borderTopWidth="1px"
         borderColor="gray.200"
         pt={3}
         mt={2}
-        flexShrink={0}
       >
         <Button
           w="100%"
@@ -61,6 +64,7 @@ export const DroneList = () => {
           variant="ghost"
           justifyContent="space-between"
           fontWeight="semibold"
+          flexShrink={0}
           onClick={() => setListOpen((open) => !open)}
         >
           {t('my-drones-title')}
@@ -69,8 +73,8 @@ export const DroneList = () => {
           </Box>
         </Button>
 
-        <Collapse in={listOpen} animateOpacity>
-          <Box maxH="200px" overflowY="auto" pt={2}>
+        {listOpen && (
+          <Box flex={1} minH={0} overflowY="auto" pt={2}>
             {loading && (
               <Text fontSize="sm" color="gray.500">
                 {t('my-drones-loading')}
@@ -126,7 +130,7 @@ export const DroneList = () => {
               })}
             </VStack>
           </Box>
-        </Collapse>
+        )}
       </Box>
 
       {detailsDrone && (

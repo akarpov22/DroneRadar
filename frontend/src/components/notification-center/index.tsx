@@ -1,7 +1,6 @@
 import {
   Box,
   Button,
-  Collapse,
   HStack,
   Text,
   VStack,
@@ -30,11 +29,15 @@ export const NotificationCenter = () => {
   return (
     <Box
       w="100%"
+      flex={open ? 1 : '0 0 auto'}
+      minH={0}
+      display="flex"
+      flexDirection="column"
+      overflow="hidden"
       borderTopWidth="1px"
       borderColor="gray.200"
       pt={3}
       mt={2}
-      flexShrink={0}
     >
       <Button
         w="100%"
@@ -42,6 +45,7 @@ export const NotificationCenter = () => {
         variant="ghost"
         justifyContent="space-between"
         fontWeight="semibold"
+        flexShrink={0}
         onClick={() => setOpen((value) => !value)}
       >
         {t('notifications-title')}
@@ -50,8 +54,8 @@ export const NotificationCenter = () => {
         </Box>
       </Button>
 
-      <Collapse in={open} animateOpacity>
-        <Box maxH="180px" overflowY="auto" pt={2}>
+      {open && (
+        <Box flex={1} minH={0} overflowY="auto" pt={2}>
           {notifications.length === 0 && (
             <Text fontSize="sm" color="gray.500">
               {t('notifications-empty')}
@@ -82,7 +86,7 @@ export const NotificationCenter = () => {
             ))}
           </VStack>
         </Box>
-      </Collapse>
+      )}
     </Box>
   );
 };

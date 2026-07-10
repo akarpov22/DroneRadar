@@ -11,6 +11,8 @@ import { startPgListener } from './db/pg-listener';
 import { getCorsOrigin } from './config/cors';
 import { startFlightZoneSyncScheduler } from './services/flight-zones-db';
 import { startMqttConsumer } from './services/mqtt-consumer';
+import { seedSimulatorDrones } from './services/seed-simulator-drones';
+import { prisma } from './context';
 
 async function startServer() {
   const app = express();
@@ -51,6 +53,7 @@ async function startServer() {
   );
 
   startPgListener();
+  await seedSimulatorDrones(prisma);
   startMqttConsumer();
   startFlightZoneSyncScheduler();
 

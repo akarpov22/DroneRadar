@@ -75,6 +75,8 @@ export function mergeDroneUpdate(prev: Drone[], incoming: Drone): Drone[] {
     ...existing,
     name: incoming.name,
     serial: incoming.serial,
+    model: incoming.model ?? existing.model,
+    alertStatus: incoming.alertStatus ?? existing.alertStatus,
     sessions,
   };
   return next;

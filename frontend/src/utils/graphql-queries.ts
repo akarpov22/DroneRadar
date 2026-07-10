@@ -88,6 +88,13 @@ export const DRONE_UPDATED = gql`
       name
       serial
       alertStatus
+      model {
+        id
+        name
+        manufacturer
+        maxSpeed
+        maxRange
+      }
       sessions {
         id
         startedAt

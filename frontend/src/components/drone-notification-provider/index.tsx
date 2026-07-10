@@ -26,6 +26,7 @@ import {
 } from '../../utils/notifications';
 
 const MAX_NOTIFICATIONS = 50;
+const MAX_VISIBLE_TOASTS = 2;
 
 type DroneNotificationContextValue = {
   notifications: DroneNotification[];
@@ -37,12 +38,13 @@ const DroneNotificationContext = createContext<DroneNotificationContextValue | n
 
 export const DroneNotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { t } = useTranslation();
-  const toast = useToast();
+  const toast = useToast({ position: 'bottom', duration: 6000, isClosable: true });
   const wsClient = useContext(SubscriptionClientContext);
   const { canManageDrones } = useDroneSelection();
   const [notifications, setNotifications] = useState<DroneNotification[]>([]);
   const [alertStatusByDroneId, setAlertStatusByDroneId] = useState<Record<string, AlertStatus>>({});
   const seenIdsRef = useRef<Set<string>>(new Set());
+  const activeToastIdsRef = useRef<string[]>([]);
 
   const { data: myDronesData } = useQuery<{ myDrones: Drone[] }>(MY_DRONES, {
     skip: !canManageDrones,
@@ -78,14 +80,25 @@ export const DroneNotificationProvider: React.FC<{ children: React.ReactNode }> 
 
       setNotifications((prev) => [notification, ...prev].slice(0, MAX_NOTIFICATIONS));
 
+      const toastId = notification.id;
+      if (toast.isActive(toastId)) return;
+
+      while (activeToastIdsRef.current.length >= MAX_VISIBLE_TOASTS) {
+        const oldestId = activeToastIdsRef.current.shift();
+        if (oldestId) toast.close(oldestId);
+      }
+
       toast({
+        id: toastId,
         title: notification.droneName,
         description: formatNotificationMessage(notification, t),
         status: notificationToastStatus(notification.severity),
-        duration: 6000,
-        isClosable: true,
-        position: 'bottom',
+        onCloseComplete: () => {
+          activeToastIdsRef.current = activeToastIdsRef.current.filter((id) => id !== toastId);
+        },
       });
+
+      activeToastIdsRef.current.push(toastId);
     },
     [t, toast],
   );

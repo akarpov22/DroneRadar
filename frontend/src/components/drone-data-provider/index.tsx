@@ -47,6 +47,9 @@ export const DroneDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setDroneSnapshot(drones);
   }, []);
 
+  const syncSnapshotRef = useRef(syncSnapshot);
+  syncSnapshotRef.current = syncSnapshot;
+
   const { data: dronesData } = useQuery<{ drones: Drone[] }>(DRONES, {
     fetchPolicy: 'cache-and-network',
   });
@@ -67,7 +70,7 @@ export const DroneDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         const next = mergeDroneUpdate(dronesRef.current, incoming);
         if (next === dronesRef.current) return;
 
-        syncSnapshot(next);
+        syncSnapshotRef.current(next);
       },
       error: (error: unknown) => {
         console.error('Drone subscription error:', error);
@@ -75,7 +78,7 @@ export const DroneDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     });
 
     return () => subscription.unsubscribe();
-  }, [wsClient, syncSnapshot]);
+  }, [wsClient]);
 
   const [models, setModels] = useState<Model[]>([]);
   const { data: droneModels } = useQuery<{ droneModels: Model[] }>(DRONE_MODELS);

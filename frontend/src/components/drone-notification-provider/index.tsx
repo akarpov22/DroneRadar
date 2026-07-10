@@ -14,11 +14,11 @@ import { useTranslation } from 'react-i18next';
 import {
   DRONE_NOTIFICATION,
   DRONE_NOTIFICATIONS,
-  DRONE_UPDATED,
   MY_DRONES,
 } from '../../utils/graphql-queries';
 import type { AlertStatus, Drone, DroneNotification } from '../../utils/types';
 import { SubscriptionClientContext } from '../../apollo-client';
+import { getDroneSnapshot, subscribeDrones } from '../../utils/drone-store';
 import { useDroneSelection } from '../drone-selection-provider';
 import {
   formatNotificationMessage,
@@ -103,6 +103,30 @@ export const DroneNotificationProvider: React.FC<{ children: React.ReactNode }> 
     [t, toast],
   );
 
+  const pushNotificationRef = useRef(pushNotification);
+  pushNotificationRef.current = pushNotification;
+
+  useEffect(() => {
+    if (!canManageDrones) return;
+
+    const syncAlertStatus = () => {
+      setAlertStatusByDroneId((prev) => {
+        const next = { ...prev };
+        let changed = false;
+        for (const drone of getDroneSnapshot()) {
+          if (drone.alertStatus && next[drone.id] !== drone.alertStatus) {
+            next[drone.id] = drone.alertStatus as AlertStatus;
+            changed = true;
+          }
+        }
+        return changed ? next : prev;
+      });
+    };
+
+    syncAlertStatus();
+    return subscribeDrones(syncAlertStatus);
+  }, [canManageDrones]);
+
   useEffect(() => {
     if (!wsClient || !canManageDrones) return;
 
@@ -110,32 +134,17 @@ export const DroneNotificationProvider: React.FC<{ children: React.ReactNode }> 
       next: (result: { data?: { droneNotification?: DroneNotification } }) => {
         const incoming = result.data?.droneNotification;
         if (!incoming) return;
-        pushNotification(incoming);
+        pushNotificationRef.current(incoming);
       },
       error: (error: unknown) => {
         console.error('Drone notification subscription error:', error);
       },
     });
 
-    const droneSub = wsClient.request({ query: print(DRONE_UPDATED) }).subscribe({
-      next: (result: { data?: { droneUpdated?: Drone } }) => {
-        const incoming = result.data?.droneUpdated;
-        if (!incoming?.alertStatus) return;
-        setAlertStatusByDroneId((prev) => ({
-          ...prev,
-          [incoming.id]: incoming.alertStatus as AlertStatus,
-        }));
-      },
-      error: (error: unknown) => {
-        console.error('Drone alert status subscription error:', error);
-      },
-    });
-
     return () => {
       notificationSub.unsubscribe();
-      droneSub.unsubscribe();
     };
-  }, [wsClient, canManageDrones, pushNotification]);
+  }, [wsClient, canManageDrones]);
 
   const dismissNotification = useCallback((id: string) => {
     setNotifications((prev) => prev.filter((item) => item.id !== id));

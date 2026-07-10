@@ -36,43 +36,64 @@ export function lerp(from, to, progress) {
 }
 
 export function buildRouteNavigator(route, targetSpeedKmh, speedMultiplier) {
-  const segmentDurationMs = (from, to) => {
-    const targetSpeedMetersPerSecond = targetSpeedKmh / 3.6;
-    return distanceMeters(from, to) / targetSpeedMetersPerSecond * 1000;
-  };
+  const targetSpeedMetersPerSecond = targetSpeedKmh / 3.6;
 
-  const routeDurationMs = route.reduce((sum, point, index) => {
-    const nextPoint = route[(index + 1) % route.length];
-    return sum + segmentDurationMs(point, nextPoint);
-  }, 0);
+  const segments = [];
+  for (let index = 0; index < route.length; index += 1) {
+    const from = route[index];
+    const to = route[(index + 1) % route.length];
+    const distance = distanceMeters(from, to);
+    if (distance <= 0) continue;
+
+    segments.push({
+      from,
+      to,
+      durationMs: distance / targetSpeedMetersPerSecond * 1000,
+    });
+  }
+
+  const routeDurationMs = segments.reduce((sum, segment) => sum + segment.durationMs, 0);
+
+  function buildPosition(from, to, progress, elapsedMs) {
+    const speedKmh = targetSpeedKmh * speedMultiplier;
+    const liveWave = Math.sin(elapsedMs / 4500);
+
+    return {
+      latitude: lerp(from.latitude, to.latitude, progress),
+      longitude: lerp(from.longitude, to.longitude, progress),
+      altitude: lerp(from.altitude, to.altitude, progress) + liveWave * 1.5,
+      speed: speedKmh + Math.sin(elapsedMs / 3000) * 0.7,
+      heading: bearingDegrees(from, to),
+    };
+  }
 
   function getPosition(elapsedMs) {
-    let timeOnRouteMs = (elapsedMs * speedMultiplier) % routeDurationMs;
-
-    for (let index = 0; index < route.length; index += 1) {
-      const from = route[index];
-      const to = route[(index + 1) % route.length];
-      const durationMs = segmentDurationMs(from, to);
-
-      if (timeOnRouteMs > durationMs) {
-        timeOnRouteMs -= durationMs;
-        continue;
-      }
-
-      const progress = timeOnRouteMs / durationMs;
-      const speedKmh = targetSpeedKmh * speedMultiplier;
+    const anchor = route[0];
+    if (routeDurationMs <= 0 || segments.length === 0) {
       const liveWave = Math.sin(elapsedMs / 4500);
-
       return {
-        latitude: lerp(from.latitude, to.latitude, progress),
-        longitude: lerp(from.longitude, to.longitude, progress),
-        altitude: lerp(from.altitude, to.altitude, progress) + liveWave * 1.5,
-        speed: speedKmh + Math.sin(elapsedMs / 3000) * 0.7,
-        heading: bearingDegrees(from, to),
+        latitude: anchor.latitude,
+        longitude: anchor.longitude,
+        altitude: anchor.altitude + liveWave * 1.5,
+        speed: targetSpeedKmh * speedMultiplier,
+        heading: 0,
       };
     }
 
-    return route[0];
+    let timeOnRouteMs = (elapsedMs * speedMultiplier) % routeDurationMs;
+
+    for (const segment of segments) {
+      if (timeOnRouteMs > segment.durationMs) {
+        timeOnRouteMs -= segment.durationMs;
+        continue;
+      }
+
+      const progress = segment.durationMs > 0 ? timeOnRouteMs / segment.durationMs : 0;
+      return buildPosition(segment.from, segment.to, progress, elapsedMs);
+    }
+
+    const last = segments[segments.length - 1];
+    return buildPosition(last.from, last.to, 1, elapsedMs);
   }
 
   return { getPosition, routeDurationMs };

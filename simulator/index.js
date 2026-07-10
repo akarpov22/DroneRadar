@@ -93,6 +93,9 @@ async function main() {
   console.log(`📡 MQTT broker: ${mqttBrokerUrl}`);
   console.log(`🛰️ Topic: ${telemetryTopic}`);
   console.log(`🗺️ Route #${routeIndex}: ${selectedRoute.name} (${selectedRoute.waypoints.length} points)`);
+  if (selectedRoute.demoKind) {
+    console.log(`🔔 Demo: ${selectedRoute.demoKind}`);
+  }
   if (selectedRoute.zoneType) {
     console.log(`🚫 Zone type: ${selectedRoute.zoneType} — ${selectedRoute.zoneLabel ?? ''}`);
   } else if (selectedRoute.zoneLabel) {

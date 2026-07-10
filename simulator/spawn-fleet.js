@@ -2,14 +2,14 @@ import 'dotenv/config';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { ROUTES } from './routes.js';
+import { ROUTES, printFleetCatalog, FLEET_SIZE } from './routes.js';
 import { buildDroneSerial } from './serials.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const indexPath = join(__dirname, 'index.js');
 
 const regionCode = process.env.REGION_CODE ?? 'SE';
-const count = Number(process.argv[2] ?? process.env.FLEET_COUNT ?? ROUTES.length);
+const count = Number(process.argv[2] ?? process.env.FLEET_COUNT ?? FLEET_SIZE);
 if (!Number.isInteger(count) || count < 1) {
   throw new Error('Fleet count must be a positive integer (argv or FLEET_COUNT)');
 }
@@ -26,6 +26,7 @@ function spawnDrone(index) {
 
   const routeIndex = index % ROUTES.length;
   const route = ROUTES[routeIndex];
+  const routePhaseMs = route.fleetPhaseMs ?? index * 90_000;
 
   const { DRONE_SERIAL: _ignoredSerial, ...baseEnv } = process.env;
 
@@ -35,7 +36,7 @@ function spawnDrone(index) {
       DRONE_SERIAL: serial,
       FLEET_INSTANCE_INDEX: String(index),
       ROUTE_INDEX: String(routeIndex),
-      ROUTE_PHASE_MS: String(index * 90_000),
+      ROUTE_PHASE_MS: String(routePhaseMs),
       REGION_CODE: regionCode,
     },
     stdio: 'inherit',
@@ -49,11 +50,11 @@ function spawnDrone(index) {
   });
 
   children.push(child);
-  const typeTag = route.zoneType ? `[${route.zoneType}] ` : '';
-  console.log(`[fleet] Started ${serial} → route #${routeIndex} ${typeTag}(${route.name})`);
+  const typeTag = route.demoKind ? `[${route.demoKind}] ` : route.zoneType ? `[${route.zoneType}] ` : '';
+  console.log(`[fleet] Started ${serial} → route #${routeIndex} ${typeTag}(${route.name}), phase=${routePhaseMs}ms`);
 }
 
-console.log(`[fleet] Launching ${count} drone simulators (${ROUTES.length} Stockholm routes: CTR, RSTA, ATZ, NOTAM)`);
+printFleetCatalog(regionCode);
 
 for (let i = 0; i < count; i += 1) {
   spawnDrone(i);

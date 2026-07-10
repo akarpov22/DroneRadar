@@ -88,7 +88,7 @@ function buildMessage(warning: ActiveWarning, droneName: string): string {
     case AlertKind.ZoneEnter:
       return `${droneName} entered zone ${warning.zoneName ?? 'unknown'}`;
     case AlertKind.CollisionAltitude:
-      return `${droneName} shares coordinates with ${warning.relatedDroneName ?? 'unknown'} (different altitude)`;
+      return `${droneName}: high collision risk with ${warning.relatedDroneName ?? 'unknown'}`;
     case AlertKind.UserZoneEnter:
       return `${droneName} entered user zone ${warning.zoneName ?? 'unknown'}`;
     case AlertKind.UserZoneExit:

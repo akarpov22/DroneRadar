@@ -75,7 +75,7 @@ services:
     environment:
       MQTT_BROKER_URL: mqtt://mosquitto:1883
       REGION_CODE: ${REGION_CODE:-SE}
-      FLEET_COUNT: ${FLEET_COUNT:-8}
+      FLEET_COUNT: ${FLEET_COUNT:-5}
       SIMULATION_INTERVAL_MS: ${SIMULATION_INTERVAL_MS:-500}
       SIMULATION_SPEED_KMH: ${SIMULATION_SPEED_KMH:-20}
     command: ["node", "spawn-fleet.js"]

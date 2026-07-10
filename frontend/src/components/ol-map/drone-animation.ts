@@ -1,6 +1,7 @@
 import { Feature } from 'ol';
 import { Point } from 'ol/geom';
 import type { Position } from '../../utils/types';
+import { isDroneSignalLost } from '../../utils/drone-signal';
 
 const MIN_DURATION_MS = 200;
 const MAX_DURATION_MS = 3000;
@@ -180,6 +181,14 @@ export function getExtrapolationMs(state: DroneAnimState, nowMs: number): number
 }
 
 export function getInterpolatedPosition(state: DroneAnimState, nowMs: number) {
+  if (isDroneSignalLost(state.pathCutoffRecordedAt)) {
+    return {
+      longitude: state.toLon,
+      latitude: state.toLat,
+      heading: state.toHeading,
+    };
+  }
+
   const t = getAnimProgress(state, nowMs);
 
   if (t < 1) {
@@ -258,5 +267,6 @@ export function setAnimTarget(
 }
 
 export function isAnimating(state: DroneAnimState, nowMs: number): boolean {
+  if (isDroneSignalLost(state.pathCutoffRecordedAt)) return false;
   return getAnimProgress(state, nowMs) < 1 || getExtrapolationMs(state, nowMs) > 0;
 }

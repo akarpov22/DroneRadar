@@ -1,10 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Feature } from 'ol';
-import { LineString, Point } from 'ol/geom';
+import { LineString, Point, Polygon } from 'ol/geom';
 import VectorSource from 'ol/source/Vector';
 import { fromLonLat } from 'ol/proj';
-import { getDroneLatestPosition } from '../../utils/drone';
+import { getDroneLatestPosition, isDroneRegistered } from '../../utils/drone';
 import { getDroneSnapshot, subscribeDrones } from '../../utils/drone-store';
+import {
+  computeFallRadiusMeters,
+  createFallCircleFeature,
+  isDroneSignalLost,
+  updateFallCircleGeometry,
+} from '../../utils/drone-signal';
 import type { Drone } from '../../utils/types';
 import {
   type DroneAnimState,
@@ -14,18 +20,16 @@ import {
 } from './drone-animation';
 import { applyDroneFeatureStyle, buildDronePathCoordinates, buildDronePathFeature } from './helpers';
 
-function isDroneExpired(recordedAt?: string): boolean {
-  if (!recordedAt) return false;
-  return Date.now() - new Date(recordedAt).getTime() > 60_000;
-}
+const SIGNAL_CHECK_INTERVAL_MS = 5000;
 
 function isDroneVisible(
   drone: Drone,
   showOnlyMine: boolean,
   myDroneIds: ReadonlySet<string>,
 ): boolean {
+  if (!isDroneRegistered(drone)) return false;
   const position = getDroneLatestPosition(drone);
-  if (isDroneExpired(position?.recordedAt)) return false;
+  if (!position) return false;
   if (showOnlyMine && !myDroneIds.has(drone.id)) return false;
   return true;
 }
@@ -47,9 +51,13 @@ export function useDroneLayers(
   const [dronePathSource] = useState<VectorSource<Feature<LineString>>>(
     () => new VectorSource({ features: [] }),
   );
+  const [droneFallCircleSource] = useState<VectorSource<Feature<Polygon>>>(
+    () => new VectorSource({ features: [] }),
+  );
 
   const animStatesRef = useRef<Map<string, DroneAnimState>>(new Map());
   const pathFeatureRef = useRef<Feature<LineString> | null>(null);
+  const fallCircleFeatureRef = useRef<Feature<Polygon> | null>(null);
   const rafRef = useRef<number | null>(null);
   const selectedDroneIdRef = useRef(selectedDroneId);
   const showOnlyMineRef = useRef(showOnlyMine);
@@ -65,6 +73,45 @@ export function useDroneLayers(
       rafRef.current = null;
     }
   }, []);
+
+  const updateFallCircleLayer = useCallback(() => {
+    const selectedId = selectedDroneIdRef.current;
+    if (!selectedId) {
+      droneFallCircleSource.clear();
+      fallCircleFeatureRef.current = null;
+      return;
+    }
+
+    const animState = animStatesRef.current.get(selectedId);
+    if (!animState || !isDroneSignalLost(animState.pathCutoffRecordedAt)) {
+      droneFallCircleSource.clear();
+      fallCircleFeatureRef.current = null;
+      return;
+    }
+
+    const drone = getDroneSnapshot().find((d) => d.id === selectedId);
+    const position = drone ? getDroneLatestPosition(drone) : null;
+    if (!position) {
+      droneFallCircleSource.clear();
+      fallCircleFeatureRef.current = null;
+      return;
+    }
+
+    const { longitude, latitude } = getInterpolatedPosition(animState, performance.now());
+    const radiusM = computeFallRadiusMeters(
+      position.altitude,
+      position.speed,
+    );
+
+    if (fallCircleFeatureRef.current) {
+      updateFallCircleGeometry(fallCircleFeatureRef.current, longitude, latitude, radiusM);
+      return;
+    }
+
+    const feature = createFallCircleFeature(longitude, latitude, radiusM);
+    droneFallCircleSource.addFeature(feature);
+    fallCircleFeatureRef.current = feature;
+  }, [droneFallCircleSource]);
 
   const updatePathLayer = useCallback((nowMs: number) => {
     const selectedId = selectedDroneIdRef.current;
@@ -107,18 +154,34 @@ export function useDroneLayers(
     }
   }, [dronePathSource]);
 
-  const tick = useCallback(() => {
-    const nowMs = performance.now();
-    let needsFrame = false;
-    let selectedAnimating = false;
-
+  const refreshDroneStyles = useCallback((nowMs: number) => {
     for (const state of animStatesRef.current.values()) {
+      const lostSignal = isDroneSignalLost(state.pathCutoffRecordedAt);
       const { longitude, latitude, heading } = getInterpolatedPosition(state, nowMs);
       state.feature.getGeometry()?.setCoordinates(fromLonLat([longitude, latitude]));
       applyDroneFeatureStyle(
         state.feature,
         heading,
         selectedDroneIdRef.current === state.droneId,
+        lostSignal,
+      );
+    }
+  }, []);
+
+  const tick = useCallback(() => {
+    const nowMs = performance.now();
+    let needsFrame = false;
+    let selectedAnimating = false;
+
+    for (const state of animStatesRef.current.values()) {
+      const lostSignal = isDroneSignalLost(state.pathCutoffRecordedAt);
+      const { longitude, latitude, heading } = getInterpolatedPosition(state, nowMs);
+      state.feature.getGeometry()?.setCoordinates(fromLonLat([longitude, latitude]));
+      applyDroneFeatureStyle(
+        state.feature,
+        heading,
+        selectedDroneIdRef.current === state.droneId,
+        lostSignal,
       );
 
       if (isAnimating(state, nowMs)) {
@@ -164,6 +227,13 @@ export function useDroneLayers(
           setAnimTarget(existing, position, nowMs);
           startedAnimation = true;
         }
+        const lostSignal = isDroneSignalLost(existing.pathCutoffRecordedAt);
+        applyDroneFeatureStyle(
+          existing.feature,
+          existing.toHeading,
+          selectedDroneIdRef.current === drone.id,
+          lostSignal,
+        );
         continue;
       }
 
@@ -192,6 +262,7 @@ export function useDroneLayers(
         feature,
         position.heading ?? 0,
         selectedDroneIdRef.current === drone.id,
+        isDroneSignalLost(position.recordedAt),
       );
 
       animStatesRef.current.set(drone.id, state);
@@ -211,20 +282,23 @@ export function useDroneLayers(
     if (selectedDroneIdRef.current && visibleIds.has(selectedDroneIdRef.current)) {
       updatePathLayer(nowMs);
     }
-  }, [droneSource, scheduleAnimation, updatePathLayer]);
+
+    updateFallCircleLayer();
+  }, [droneSource, scheduleAnimation, updatePathLayer, updateFallCircleLayer]);
 
   const syncPathLayer = useCallback(() => {
     updatePathLayer(performance.now());
   }, [updatePathLayer]);
 
-  useEffect(() => {
-    const sync = () => {
-      syncDroneLayer();
-      syncPathLayer();
-    };
-    sync();
-    return subscribeDrones(sync);
+  const syncAllLayers = useCallback(() => {
+    syncDroneLayer();
+    syncPathLayer();
   }, [syncDroneLayer, syncPathLayer]);
+
+  useEffect(() => {
+    syncAllLayers();
+    return subscribeDrones(syncAllLayers);
+  }, [syncAllLayers]);
 
   useEffect(() => {
     syncDroneLayer();
@@ -233,22 +307,27 @@ export function useDroneLayers(
 
   useEffect(() => {
     pathFeatureRef.current = null;
+    fallCircleFeatureRef.current = null;
     dronePathSource.clear();
+    droneFallCircleSource.clear();
 
     const nowMs = performance.now();
-    for (const state of animStatesRef.current.values()) {
-      const { heading } = getInterpolatedPosition(state, nowMs);
-      applyDroneFeatureStyle(
-        state.feature,
-        heading,
-        selectedDroneId === state.droneId,
-      );
-    }
-
+    refreshDroneStyles(nowMs);
     updatePathLayer(nowMs);
-  }, [selectedDroneId, dronePathSource, updatePathLayer]);
+    updateFallCircleLayer();
+  }, [selectedDroneId, dronePathSource, droneFallCircleSource, refreshDroneStyles, updatePathLayer, updateFallCircleLayer]);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      const nowMs = performance.now();
+      refreshDroneStyles(nowMs);
+      updateFallCircleLayer();
+    }, SIGNAL_CHECK_INTERVAL_MS);
+
+    return () => window.clearInterval(intervalId);
+  }, [refreshDroneStyles, updateFallCircleLayer]);
 
   useEffect(() => () => stopAnimationLoop(), [stopAnimationLoop]);
 
-  return { droneSource, dronePathSource };
+  return { droneSource, dronePathSource, droneFallCircleSource };
 };

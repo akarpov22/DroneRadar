@@ -28,7 +28,7 @@ export type Drone = {
     id: string;
     name: string;
     serial: string | null;
-    model: Model;
+    model: Model | null;
     operator: string;
     alertStatus?: AlertStatus;
     createdAt: string;

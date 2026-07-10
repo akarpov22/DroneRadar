@@ -7,10 +7,12 @@ import {
 } from '@chakra-ui/react';
 import { useQuery } from '@apollo/client';
 import { useTranslation } from 'react-i18next';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { MY_DRONES } from '../../utils/graphql-queries';
 import type { AlertStatus, Drone } from '../../utils/types';
-import { getDroneSnapshot } from '../../utils/drone-store';
+import { getDroneLatestPosition } from '../../utils/drone';
+import { getDroneSnapshot, subscribeDrones } from '../../utils/drone-store';
+import { isDroneSignalLost } from '../../utils/drone-signal';
 import { useDroneSelection } from '../drone-selection-provider';
 import { useDroneNotifications } from '../drone-notification-provider';
 import { alertStatusColor } from '../../utils/notifications';
@@ -26,6 +28,17 @@ export const DroneList = () => {
   const [detailsDrone, setDetailsDrone] = useState<Drone | null>(null);
   const { selectedDrone, setSelectedDrone, canManageDrones } = useDroneSelection();
   const { alertStatusByDroneId } = useDroneNotifications();
+  const [, setSignalTick] = useState(0);
+
+  useEffect(() => {
+    const bump = () => setSignalTick((n) => n + 1);
+    const unsubscribe = subscribeDrones(bump);
+    const intervalId = window.setInterval(bump, 5000);
+    return () => {
+      unsubscribe();
+      window.clearInterval(intervalId);
+    };
+  }, []);
 
   const { data, loading } = useQuery<{ myDrones: Drone[] }>(MY_DRONES, {
     skip: !canManageDrones,
@@ -90,6 +103,9 @@ export const DroneList = () => {
                 const isSelected = selectedDrone?.id === drone.id;
                 const status: AlertStatus =
                   alertStatusByDroneId[drone.id] ?? drone.alertStatus ?? 'GREEN';
+                const resolved = resolveDrone(drone);
+                const latestPosition = getDroneLatestPosition(resolved);
+                const signalLost = isDroneSignalLost(latestPosition?.recordedAt);
                 return (
                   <Button
                     key={drone.id}
@@ -121,6 +137,11 @@ export const DroneList = () => {
                         {drone.serial && (
                           <Text fontSize="xs" color={isSelected ? 'blue.100' : 'gray.500'}>
                             {drone.serial}
+                          </Text>
+                        )}
+                        {signalLost && (
+                          <Text fontSize="xs" color="red.500" fontWeight="medium">
+                            {t('signal-lost')}
                           </Text>
                         )}
                       </Box>

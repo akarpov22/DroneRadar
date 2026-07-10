@@ -23,6 +23,10 @@ export function getDroneLatestPosition(drone: Drone): Position | undefined {
   return getLatestPosition(getCurrentSession(drone.sessions)?.positions ?? []);
 }
 
+export function isDroneRegistered(drone: Drone): boolean {
+  return drone.model != null;
+}
+
 export function mergeDroneUpdate(prev: Drone[], incoming: Drone): Drone[] {
   const index = prev.findIndex((drone) => drone.id === incoming.id);
   if (index === -1) {

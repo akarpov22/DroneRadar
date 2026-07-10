@@ -5,7 +5,7 @@ import TileLayer from 'ol/layer/Tile';
 import VectorLayer from 'ol/layer/Vector';
 import OSM from 'ol/source/OSM';
 import { Feature } from 'ol';
-import { Geometry, LineString, Point } from 'ol/geom';
+import { Geometry, LineString, Point, Polygon } from 'ol/geom';
 import VectorSource from 'ol/source/Vector';
 import { fromLonLat } from 'ol/proj';
 import { getDroneSnapshot } from '../../utils/drone-store';
@@ -19,6 +19,7 @@ interface UseOlMapInitOptions {
   userZonesSource: VectorSource<Feature<Geometry>>;
   droneSource: VectorSource<Feature<Point>>;
   dronePathSource: VectorSource<Feature<LineString>>;
+  droneFallCircleSource: VectorSource<Feature<Polygon>>;
   onSelectDrone: (drone: Drone | undefined) => void;
   onZoneTooltip: (text: string | null) => void;
   onUserZoneSelect: (zoneId: string | null) => void;
@@ -32,6 +33,7 @@ export function useOlMapInit({
   userZonesSource,
   droneSource,
   dronePathSource,
+  droneFallCircleSource,
   onSelectDrone,
   onZoneTooltip,
   onUserZoneSelect,
@@ -46,8 +48,9 @@ export function useOlMapInit({
 
     const zonesLayer = new VectorLayer({ source: zonesSource, zIndex: 1 });
     const userZonesLayer = new VectorLayer({ source: userZonesSource, zIndex: 2 });
-    const dronePathLayer = new VectorLayer({ source: dronePathSource, zIndex: 3 });
-    const droneLayer = new VectorLayer({ source: droneSource, zIndex: 4 });
+    const droneFallCircleLayer = new VectorLayer({ source: droneFallCircleSource, zIndex: 3 });
+    const dronePathLayer = new VectorLayer({ source: dronePathSource, zIndex: 4 });
+    const droneLayer = new VectorLayer({ source: droneSource, zIndex: 5 });
 
     const olMap = new OpenLayersMap({
       target: mapRef.current,
@@ -55,6 +58,7 @@ export function useOlMapInit({
         new TileLayer({ source: new OSM() }),
         zonesLayer,
         userZonesLayer,
+        droneFallCircleLayer,
         dronePathLayer,
         droneLayer,
       ],
@@ -134,6 +138,7 @@ export function useOlMapInit({
   }, [
     mapRef,
     dronePathSource,
+    droneFallCircleSource,
     droneSource,
     onMapReady,
     onSelectDrone,

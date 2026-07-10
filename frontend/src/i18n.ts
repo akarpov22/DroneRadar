@@ -129,6 +129,8 @@ i18n
           "alert-user-zone-enter": "{{drone}} entered user zone {{zone}}",
           "alert-user-zone-exit": "{{drone}} exited user zone {{zone}}",
           "alert-cleared": "{{drone}}: all warnings cleared",
+          "signal-lost": "Signal lost",
+          "fall-radius": "Possible location area (fall or hover): {{radius}} m",
         },
       },
       uk: {
@@ -248,6 +250,8 @@ i18n
           "alert-user-zone-enter": "{{drone}} увійшов у користувацьку зону {{zone}}",
           "alert-user-zone-exit": "{{drone}} вийшов із користувацької зони {{zone}}",
           "alert-cleared": "{{drone}}: усі попередження знято",
+          "signal-lost": "Сигнал втрачено",
+          "fall-radius": "Зона можливого місцезнаходження (падіння або зависання): {{radius}} м",
         },
       },
     },

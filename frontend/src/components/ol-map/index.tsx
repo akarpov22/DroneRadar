@@ -34,7 +34,7 @@ export const OlMap: React.FC = () => {
     openRenameZone,
   } = useUserZonesContext();
 
-  const { droneSource, dronePathSource } = useDroneLayers(
+  const { droneSource, dronePathSource, droneFallCircleSource } = useDroneLayers(
     selectedDrone?.id,
     canManageDrones && showOnlyMine,
     myDroneIds,
@@ -68,6 +68,7 @@ export const OlMap: React.FC = () => {
     userZonesSource,
     droneSource,
     dronePathSource,
+    droneFallCircleSource,
     onSelectDrone: handleSelectDrone,
     onZoneTooltip: setZoneTooltip,
     onUserZoneSelect: setSelectedZoneId,

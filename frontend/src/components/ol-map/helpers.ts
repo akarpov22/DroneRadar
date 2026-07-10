@@ -14,7 +14,7 @@ import {
   applyUserZoneFeatureProps,
   type UserZoneResult,
 } from '../../utils/user-zones';
-import { getCurrentSession, getDroneLatestPosition } from '../../utils/drone';
+import { getCurrentSession, getDroneLatestPosition, isDroneRegistered } from '../../utils/drone';
 import type { Drone } from '../../utils/types';
 import type { FlightRestrictionZoneResult } from './types';
 
@@ -69,23 +69,21 @@ export function formatZoneTooltip(feature: Feature<Geometry>): string {
   return parts.join('\n');
 }
 
-function isDroneExpired(recordedAt?: string): boolean {
-  if (!recordedAt) return false;
-  return Date.now() - new Date(recordedAt).getTime() > 60_000;
-}
-
 export function applyDroneFeatureStyle(
   feature: Feature<Point>,
   heading: number,
   selected: boolean,
+  lostSignal = false,
 ): void {
   let style = feature.get('droneStyle') as Style | undefined;
   const wasSelected = feature.get('droneSelected') as boolean | undefined;
+  const wasLostSignal = feature.get('droneLostSignal') as boolean | undefined;
 
-  if (!style || wasSelected !== selected) {
-    style = createDroneStyle(heading, selected);
+  if (!style || wasSelected !== selected || wasLostSignal !== lostSignal) {
+    style = createDroneStyle(heading, selected, lostSignal);
     feature.set('droneStyle', style);
     feature.set('droneSelected', selected);
+    feature.set('droneLostSignal', lostSignal);
     feature.setStyle(style);
     return;
   }
@@ -97,22 +95,28 @@ export function applyDroneFeatureStyle(
   }
 }
 
-function createDroneStyle(heading: number, selected: boolean): Style {
+function createDroneStyle(heading: number, selected: boolean, lostSignal: boolean): Style {
+  let color: string | undefined;
+  if (lostSignal) {
+    color = '#ef4444';
+  } else if (selected) {
+    color = '#ffff00';
+  }
+
   return new Style({
     image: new Icon({
       anchor: [0.5, 1],
       scale: 0.02,
       src: '/assets/drone.png',
       rotation: degreesToRadians(heading),
-      color: selected ? '#ffff00' : undefined,
+      color,
     }),
   });
 }
 
 function isDroneVisible(drone: Drone): boolean {
-  const position = getDroneLatestPosition(drone);
-  if (isDroneExpired(position?.recordedAt)) return false;
-  return true;
+  if (!isDroneRegistered(drone)) return false;
+  return getDroneLatestPosition(drone) != null;
 }
 
 export function buildDroneFeatures(
@@ -133,6 +137,7 @@ export function buildDroneFeatures(
     feature.setStyle(createDroneStyle(
       position.heading ?? 0,
       selectedDroneId === drone.id,
+      false,
     ));
     features.push(feature);
   }

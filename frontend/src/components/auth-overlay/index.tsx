@@ -28,7 +28,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LanguageSwitcher } from '../language-switcher';
 import { useDrones } from '../drone-data-provider';
-import { DRONES, MY_DRONES } from '../../utils/graphql-queries';
+import { DRONES, MY_DRONES, REGIONS } from '../../utils/graphql-queries';
 import { AdminPanel } from '../admin-panel';
 
 const ME = gql`
@@ -90,6 +90,12 @@ function AuthOverlayInner({ onLoginModalOpenChange }: AuthOverlayProps) {
   const hasAutoOpened = useRef(false);
   const [registerFormKey, setRegisterFormKey] = useState(0);
   const { models } = useDrones();
+
+  const { data: regionsData } = useQuery<{ regions: { id: string; name: string; regionCode: string }[] }>(
+    REGIONS,
+    { skip: !registerModal.isOpen },
+  );
+  const regions = regionsData?.regions ?? [];
 
   const { data: meData } = useQuery(ME, {
     skip: !isAuthenticated || isLoading,
@@ -328,7 +334,13 @@ function AuthOverlayInner({ onLoginModalOpenChange }: AuthOverlayProps) {
                 </FormControl>
                 <FormControl isRequired>
                   <FormLabel>{t('auth-region-code')}</FormLabel>
-                  <Input name="regionCode" />
+                  <Select name="regionCode" placeholder={t('select-region')}>
+                    {regions.map((region) => (
+                      <option value={region.regionCode} key={region.id}>
+                        {`${region.regionCode} — ${region.name}`}
+                      </option>
+                    ))}
+                  </Select>
                 </FormControl>
                 <FormControl isRequired>
                   <FormLabel>{t('drone-model')}</FormLabel>

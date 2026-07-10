@@ -15,6 +15,7 @@ i18n
       en: {
         translation: {
           "select-model": "Select model",
+          "select-region": "Select region code",
           "drone-model": "Drone model",
           "name": "Name",
           "manufacturer": "Manufacturer",
@@ -133,6 +134,7 @@ i18n
       uk: {
         translation: {
           "select-model": "Вибрати модель",
+          "select-region": "Вибрати код регіону",
           "drone-model": "Модель дрону",
           "name": "Ім'я",
           "manufacturer": "Виробник",

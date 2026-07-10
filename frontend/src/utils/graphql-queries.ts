@@ -69,6 +69,16 @@ export const DRONE_MODELS = gql`
     name
   }
 }`;
+
+export const REGIONS = gql`
+  query Regions {
+    regions {
+      id
+      name
+      regionCode
+    }
+  }
+`;
   
 
 export const DRONE_UPDATED = gql`

@@ -3,19 +3,12 @@ import mqtt, { MqttClient, IClientOptions } from 'mqtt';
 import { prisma } from '../context';
 import { resolveDroneForTelemetry } from './resolve-drone-for-telemetry';
 import { ingestPosition } from './ingest-position';
+import {
+  parseSerialFromTopic,
+  validateTelemetryPayload,
+} from './telemetry-validation';
 
-const TELEMETRY_TOPIC_PREFIX = 'droneradar/telemetry/';
 const MQTT_WATCHDOG_MS = 60_000;
-
-type TelemetryPayload = {
-  regionCode?: string;
-  latitude?: number;
-  longitude?: number;
-  altitude?: number;
-  heading?: number;
-  speed?: number;
-  timestamp?: string;
-};
 
 let client: MqttClient | null = null;
 let watchdogTimer: ReturnType<typeof setInterval> | null = null;
@@ -79,27 +72,6 @@ function startWatchdog(mqttClient: MqttClient): void {
   }, MQTT_WATCHDOG_MS);
 }
 
-function parseSerialFromTopic(topic: string): string | null {
-  if (!topic.startsWith(TELEMETRY_TOPIC_PREFIX)) {
-    return null;
-  }
-
-  const serial = topic.slice(TELEMETRY_TOPIC_PREFIX.length).trim();
-  return serial.length > 0 ? serial : null;
-}
-
-function isValidPayload(payload: TelemetryPayload): payload is Required<
-  Pick<TelemetryPayload, 'latitude' | 'longitude' | 'timestamp' | 'regionCode'>
-> & TelemetryPayload {
-  return (
-    typeof payload.latitude === 'number'
-    && typeof payload.longitude === 'number'
-    && typeof payload.timestamp === 'string'
-    && typeof payload.regionCode === 'string'
-    && payload.regionCode.trim().length > 0
-  );
-}
-
 async function handleMessage(topic: string, rawPayload: Buffer): Promise<void> {
   const serial = parseSerialFromTopic(topic);
   if (!serial) {
@@ -107,20 +79,22 @@ async function handleMessage(topic: string, rawPayload: Buffer): Promise<void> {
     return;
   }
 
-  let payload: TelemetryPayload;
+  let parsed: unknown;
   try {
-    payload = JSON.parse(rawPayload.toString()) as TelemetryPayload;
+    parsed = JSON.parse(rawPayload.toString());
   } catch {
     console.warn(`MQTT: invalid JSON from serial ${serial}`);
     return;
   }
 
-  if (!isValidPayload(payload)) {
+  const validation = validateTelemetryPayload(parsed);
+  if (!validation.valid) {
     console.warn(`MQTT: invalid telemetry payload from serial ${serial}`);
     return;
   }
 
-  const result = await resolveDroneForTelemetry(prisma, serial, payload.regionCode.trim());
+  const payload = validation.payload;
+  const result = await resolveDroneForTelemetry(prisma, serial, payload.regionCode);
   if (!result.ok) {
     const detail = result.detail ? ` (${result.detail})` : '';
     console.warn(`MQTT: rejected telemetry from serial ${serial}: ${result.reason}${detail}`);

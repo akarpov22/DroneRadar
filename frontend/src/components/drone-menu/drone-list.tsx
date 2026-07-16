@@ -46,7 +46,16 @@ export const DroneList = () => {
 
   if (!canManageDrones) return null;
 
-  const drones = data?.myDrones ?? [];
+  const drones = [...(data?.myDrones ?? [])].sort((a, b) => {
+    const aLost = isDroneSignalLost(
+      getDroneLatestPosition(resolveDrone(a))?.recordedAt,
+    );
+    const bLost = isDroneSignalLost(
+      getDroneLatestPosition(resolveDrone(b))?.recordedAt,
+    );
+    if (aLost !== bLost) return Number(aLost) - Number(bLost);
+    return a.name.localeCompare(b.name);
+  });
 
   const handleDroneClick = (drone: Drone) => {
     const resolved = resolveDrone(drone);

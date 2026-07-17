@@ -29,7 +29,7 @@ export const FLEET_CATALOG = FLEET_PLAN.map((entry) => {
     PAIR_PROXIMITY_COLLISION:
       'DRONE_PROXIMITY + COLLISION_ALTITUDE — цикл 15 с (расходятся → пересекаются → назад)',
     RED_ZONE_PULSE:
-      'ZONE_ENTER — вне BROMMA CTR → каждые 10 с вход, 5 с внутри, выход на старт',
+      'ZONE_ENTER — челночный полёт через SW-угол BROMMA CTR (без пауз на концах)',
   };
 
   return {

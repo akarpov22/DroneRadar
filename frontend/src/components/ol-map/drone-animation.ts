@@ -5,9 +5,11 @@ import { isDroneSignalLost } from '../../utils/drone-signal';
 
 const MIN_DURATION_MS = 200;
 const MAX_DURATION_MS = 3000;
-const MAX_EXTRAPOLATION_MS = 1500;
-const MAX_PLAUSIBLE_SPEED_KMH = 150;
-const SPEED_TOLERANCE = 1.5;
+/** Short coast only — long dead-reckoning overshoots shuttle endpoints and snaps back with a 180° flip. */
+const MAX_EXTRAPOLATION_MS = 200;
+/** Only treat as a GPS glitch above this — below it, trust telemetry (incl. fast sim legs). */
+const MAX_PLAUSIBLE_SPEED_KMH = 2000;
+const MAX_SPIKE_METERS = 10_000;
 
 export interface DroneAnimState {
   droneId: string;
@@ -113,30 +115,24 @@ function recordedAtDeltaMs(prevRecordedAt: string | undefined, nextRecordedAt: s
   return Math.min(Math.max(delta, MIN_DURATION_MS), MAX_DURATION_MS);
 }
 
-/** Prefer physics-based duration when speed is known. */
+/**
+ * Animate over the wall-clock gap between telemetry samples so the marker
+ * stays on the recorded track (speed-based duration lagged behind fast hops).
+ */
 export function computeAnimationDuration(
-  fromLat: number,
-  fromLon: number,
-  toLat: number,
-  toLon: number,
+  _fromLat: number,
+  _fromLon: number,
+  _toLat: number,
+  _toLon: number,
   prevRecordedAt: string | undefined,
   nextRecordedAt: string,
-  speedKmh: number | null,
+  _speedKmh: number | null,
 ): number {
   if (!prevRecordedAt) return 0;
-
-  const timeBasedMs = recordedAtDeltaMs(prevRecordedAt, nextRecordedAt);
-  const segmentMeters = distanceMeters(fromLat, fromLon, toLat, toLon);
-
-  if (speedKmh != null && speedKmh > 0 && segmentMeters > 0.5) {
-    const speedBasedMs = (segmentMeters / (speedKmh / 3.6)) * 1000;
-    return Math.min(Math.max(speedBasedMs, MIN_DURATION_MS), MAX_DURATION_MS);
-  }
-
-  return timeBasedMs;
+  return recordedAtDeltaMs(prevRecordedAt, nextRecordedAt);
 }
 
-/** Limit target to what is reachable at reported speed — filters GPS spikes. */
+/** Drop only extreme GPS teleports; otherwise trust telemetry coordinates. */
 export function sanitizePositionTarget(
   fromLat: number,
   fromLon: number,
@@ -153,14 +149,14 @@ export function sanitizePositionTarget(
   }
 
   const impliedSpeedKmh = (segmentMeters / 1000) / (deltaMs / 3_600_000);
-  const trustedSpeed = Math.max(target.speed ?? 0, fallbackSpeedKmh, 5);
-  const maxSpeedKmh = Math.min(MAX_PLAUSIBLE_SPEED_KMH, trustedSpeed * SPEED_TOLERANCE);
+  const isSpike = segmentMeters > MAX_SPIKE_METERS
+    || impliedSpeedKmh > MAX_PLAUSIBLE_SPEED_KMH;
 
-  if (impliedSpeedKmh <= maxSpeedKmh) {
+  if (!isSpike) {
     return { latitude: target.latitude, longitude: target.longitude };
   }
 
-  const maxDistM = (maxSpeedKmh / 3.6) * (deltaMs / 1000);
+  const maxSpeedKmh = Math.max(fallbackSpeedKmh, target.speed ?? 0, 50);
   const bearing = movementHeading(fromLon, fromLat, target.longitude, target.latitude)
     ?? target.heading
     ?? fallbackHeading;
@@ -224,12 +220,58 @@ export function getInterpolatedPosition(state: DroneAnimState, nowMs: number) {
   };
 }
 
+/** Smallest signed turn from `fromDeg` to `toDeg` in [-180, 180]. */
+export function headingDeltaDeg(fromDeg: number, toDeg: number): number {
+  return ((toDeg - fromDeg + 540) % 360) - 180;
+}
+
+/**
+ * Position to start the next animation segment from.
+ * If dead-reckoning coasted past the last fix and the new sample lies behind us
+ * (typical shuttle turnaround), snap back to the last confirmed point so we don't
+ * lerp backwards with a sudden 180° heading flip.
+ */
+export function getAnimStartPosition(
+  state: DroneAnimState,
+  next: Position,
+  nowMs: number,
+): { longitude: number; latitude: number; heading: number } {
+  const current = getInterpolatedPosition(state, nowMs);
+  const coasting = getExtrapolationMs(state, nowMs) > 0;
+  if (!coasting) return current;
+
+  const bearingToNext = movementHeading(
+    current.longitude,
+    current.latitude,
+    next.longitude,
+    next.latitude,
+  );
+  if (bearingToNext == null) {
+    return {
+      longitude: state.toLon,
+      latitude: state.toLat,
+      heading: state.toHeading,
+    };
+  }
+
+  // New fix is more than 90° off the coast heading → we overshot a turnaround.
+  if (Math.abs(headingDeltaDeg(state.toHeading, bearingToNext)) > 90) {
+    return {
+      longitude: state.toLon,
+      latitude: state.toLat,
+      heading: state.toHeading,
+    };
+  }
+
+  return current;
+}
+
 export function setAnimTarget(
   state: DroneAnimState,
   position: Position,
   nowMs: number,
 ): void {
-  const current = getInterpolatedPosition(state, nowMs);
+  const current = getAnimStartPosition(state, position, nowMs);
   const sanitized = sanitizePositionTarget(
     current.latitude,
     current.longitude,
@@ -239,10 +281,19 @@ export function setAnimTarget(
     state.toHeading,
   );
 
-  const toHeading = position.heading
-    ?? movementHeading(current.longitude, current.latitude, sanitized.longitude, sanitized.latitude)
+  const movement = movementHeading(
+    current.longitude,
+    current.latitude,
+    sanitized.longitude,
+    sanitized.latitude,
+  );
+  const reportedHeading = position.heading;
+  // Prefer geometry of this hop at turnarounds; telemetry heading can flip a sample early/late.
+  const toHeading = movement
+    ?? reportedHeading
     ?? state.toHeading;
-  const toSpeed = Math.max(position.speed ?? 0, state.toSpeed, 0);
+  // Use the latest reported speed (do not keep a high max — that overshoots endpoints).
+  const toSpeed = Math.max(position.speed ?? 0, 0);
 
   const durationMs = computeAnimationDuration(
     current.latitude,

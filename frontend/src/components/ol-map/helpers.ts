@@ -105,7 +105,8 @@ function createDroneStyle(heading: number, selected: boolean, lostSignal: boolea
 
   return new Style({
     image: new Icon({
-      anchor: [0.5, 1],
+      // Center on the map coordinate so the marker stays on the path tip while rotating.
+      anchor: [0.5, 0.5],
       scale: 0.02,
       src: '/assets/drone.png',
       rotation: degreesToRadians(heading),

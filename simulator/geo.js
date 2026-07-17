@@ -45,7 +45,7 @@ export function buildRouteNavigator(route, targetSpeedKmh, speedMultiplier, opti
   const targetSpeedMetersPerSecond = targetSpeedKmh / 3.6;
   const cycleDurationMs = options.cycleDurationMs;
 
-  /** @type {Array<{ kind: 'hold' | 'move', from: object, to: object, durationMs: number, heading: number }>} */
+  /** @type {Array<{ kind: 'hold' | 'move', from: object, to: object, durationMs: number, heading: number, distanceM: number }>} */
   const segments = [];
 
   for (let index = 0; index < route.length; index += 1) {
@@ -55,7 +55,7 @@ export function buildRouteNavigator(route, targetSpeedKmh, speedMultiplier, opti
 
     const holdMs = Number(from.holdMs ?? 0);
     if (holdMs > 0) {
-      segments.push({ kind: 'hold', from, to: from, durationMs: holdMs, heading });
+      segments.push({ kind: 'hold', from, to: from, durationMs: holdMs, heading, distanceM: 0 });
     }
 
     const distance = distanceMeters(from, to);
@@ -66,7 +66,7 @@ export function buildRouteNavigator(route, targetSpeedKmh, speedMultiplier, opti
       : distance / targetSpeedMetersPerSecond * 1000;
 
     if (legMs > 0) {
-      segments.push({ kind: 'move', from, to, durationMs: legMs, heading });
+      segments.push({ kind: 'move', from, to, durationMs: legMs, heading, distanceM: distance });
     }
   }
 
@@ -88,8 +88,7 @@ export function buildRouteNavigator(route, targetSpeedKmh, speedMultiplier, opti
 
   const routeDurationMs = segments.reduce((sum, segment) => sum + segment.durationMs, 0);
 
-  function buildPosition(from, to, progress, elapsedMs, heading) {
-    const speedKmh = targetSpeedKmh * speedMultiplier;
+  function buildPosition(from, to, progress, elapsedMs, heading, speedKmh) {
     const liveWave = Math.sin(elapsedMs / 4500);
 
     return {
@@ -99,6 +98,13 @@ export function buildRouteNavigator(route, targetSpeedKmh, speedMultiplier, opti
       speed: speedKmh + Math.sin(elapsedMs / 3000) * 0.7,
       heading,
     };
+  }
+
+  function segmentSpeedKmh(segment) {
+    if (segment.kind !== 'move' || segment.durationMs <= 0 || segment.distanceM <= 0) {
+      return targetSpeedKmh * speedMultiplier;
+    }
+    return (segment.distanceM / (segment.durationMs / 1000)) * 3.6 * speedMultiplier;
   }
 
   function getPosition(elapsedMs) {
@@ -134,7 +140,14 @@ export function buildRouteNavigator(route, targetSpeedKmh, speedMultiplier, opti
       }
 
       const progress = segment.durationMs > 0 ? timeOnRouteMs / segment.durationMs : 0;
-      return buildPosition(segment.from, segment.to, progress, elapsedMs, segment.heading);
+      return buildPosition(
+        segment.from,
+        segment.to,
+        progress,
+        elapsedMs,
+        segment.heading,
+        segmentSpeedKmh(segment),
+      );
     }
 
     const last = segments[segments.length - 1];
@@ -147,7 +160,7 @@ export function buildRouteNavigator(route, targetSpeedKmh, speedMultiplier, opti
         heading: last.heading,
       };
     }
-    return buildPosition(last.from, last.to, 1, elapsedMs, last.heading);
+    return buildPosition(last.from, last.to, 1, elapsedMs, last.heading, segmentSpeedKmh(last));
   }
 
   return { getPosition, routeDurationMs };

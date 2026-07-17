@@ -65,11 +65,11 @@ const pairLon = 17.651;
 const pairShuttleLow = buildShuttle(pairLat, pairLon, PAIR_SHUTTLE_LENGTH_M, 90);
 const pairShuttleHigh = buildShuttle(pairLat, pairLon, PAIR_SHUTTLE_LENGTH_M, 115);
 
-// --- SE-SIM-005: wait outside BROMMA CTR 10 s → enter → stay 5 s → return ---
+// --- SE-SIM-005: continuous shuttle across BROMMA CTR SW corner ---
 /**
  * Cross the SW corner of the real LFV BROMMA CTR polygon:
  *   [17.74666667, 59.24944444]
- * Diagonal: SW outside → NE inside (path cuts the corner).
+ * Diagonal: SW outside ↔ NE inside (no endpoint holds).
  */
 const BROMMA_CTR_SW_CORNER = { latitude: 59.24944444, longitude: 17.74666667 };
 const brommaOutside = offsetMeters(
@@ -85,8 +85,8 @@ const brommaInside = offsetMeters(
   800,
 );
 const redZoneRoute = [
-  wp(brommaOutside.latitude, brommaOutside.longitude, 105, { holdMs: 10_000, legMs: 4_000 }),
-  wp(brommaInside.latitude, brommaInside.longitude, 110, { holdMs: 5_000, legMs: 4_000 }),
+  wp(brommaOutside.latitude, brommaOutside.longitude, 105, { legMs: 8_000 }),
+  wp(brommaInside.latitude, brommaInside.longitude, 110, { legMs: 8_000 }),
 ];
 
 /** @type {DemoRoute[]} */
@@ -118,7 +118,7 @@ export const NOTIFICATION_DEMO_ROUTES = [
 
 export const RED_ZONE_DEMO_ROUTE = {
   id: 'demo-bromma-ctr-pulse',
-  name: 'Demo — BROMMA CTR enter 5 s / wait outside 10 s',
+  name: 'Demo — BROMMA CTR corner shuttle',
   demoKind: 'RED_ZONE_PULSE',
   zoneType: 'CTR',
   zoneLabel: 'BROMMA CTR',

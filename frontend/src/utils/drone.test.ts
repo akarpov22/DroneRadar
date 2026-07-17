@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { lerpValue } from '../components/ol-map/drone-animation';
-import { mergeDroneUpdate } from '../utils/drone';
+import { buildDronePathCoordinates } from '../components/ol-map/helpers';
+import { getActiveSession, mergeDroneUpdate } from '../utils/drone';
 import type { Drone, Position, Session } from '../utils/types';
 
 function makePosition(id: string, recordedAt: string, latitude = 59.3293): Position {
@@ -15,11 +16,16 @@ function makePosition(id: string, recordedAt: string, latitude = 59.3293): Posit
   };
 }
 
-function makeSession(id: string, positions: Position[]): Session {
+function makeSession(
+  id: string,
+  positions: Position[],
+  endedAt: string | null = null,
+  startedAt = '2026-07-13T10:00:00.000Z',
+): Session {
   return {
     id,
-    startedAt: '2026-07-13T10:00:00.000Z',
-    endedAt: null,
+    startedAt,
+    endedAt,
     positions,
   };
 }
@@ -35,6 +41,65 @@ function makeDrone(id: string, session: Session): Drone {
     sessions: [session],
   };
 }
+
+describe('getActiveSession', () => {
+  it('returns only the active session when older ended sessions exist', () => {
+    const endedSession = makeSession(
+      'session-old',
+      [makePosition('pos-old', '2026-07-13T11:00:00.000Z', 59.32)],
+      '2026-07-13T11:30:00.000Z',
+      '2026-07-13T10:00:00.000Z',
+    );
+    const activeSession = makeSession(
+      'session-active',
+      [makePosition('pos-new', '2026-07-13T12:00:00.000Z', 59.33)],
+      null,
+      '2026-07-13T12:00:00.000Z',
+    );
+
+    expect(getActiveSession([endedSession, activeSession])?.id).toBe('session-active');
+  });
+
+  it('returns undefined when all sessions are ended', () => {
+    const endedSession = makeSession(
+      'session-old',
+      [makePosition('pos-old', '2026-07-13T11:00:00.000Z')],
+      '2026-07-13T11:30:00.000Z',
+    );
+
+    expect(getActiveSession([endedSession])).toBeUndefined();
+  });
+});
+
+describe('buildDronePathCoordinates', () => {
+  it('draws path only for the active session', () => {
+    const drone = makeDrone('drone-1', makeSession('session-active', [
+      makePosition('pos-active', '2026-07-13T12:00:00.000Z', 59.33),
+    ]));
+    drone.sessions = [
+      makeSession(
+        'session-old',
+        [makePosition('pos-old', '2026-07-13T11:00:00.000Z', 59.32)],
+        '2026-07-13T11:30:00.000Z',
+      ),
+      drone.sessions[0],
+    ];
+
+    const coordinates = buildDronePathCoordinates([drone], 'drone-1');
+
+    expect(coordinates).toHaveLength(1);
+  });
+
+  it('returns null when there is no active session', () => {
+    const drone = makeDrone('drone-1', makeSession(
+      'session-old',
+      [makePosition('pos-old', '2026-07-13T11:00:00.000Z')],
+      '2026-07-13T11:30:00.000Z',
+    ));
+
+    expect(buildDronePathCoordinates([drone], 'drone-1')).toBeNull();
+  });
+});
 
 describe('mergeDroneUpdate', () => {
   it('appends a new position without duplicating existing position ids', () => {

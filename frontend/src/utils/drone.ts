@@ -2,14 +2,23 @@ import { Drone, Position, Session } from './types';
 
 const MAX_STORED_POSITIONS = 500;
 
-export function getCurrentSession(sessions: Session[]): Session | undefined {
-  const active = sessions.filter((session) => !session.endedAt);
-  const pool = active.length > 0 ? active : sessions;
-
-  return pool.reduce<Session | undefined>((latest, session) => {
+function pickLatestSession(sessions: Session[]): Session | undefined {
+  return sessions.reduce<Session | undefined>((latest, session) => {
     if (!latest) return session;
     return new Date(session.startedAt) > new Date(latest.startedAt) ? session : latest;
   }, undefined);
+}
+
+/** Active flight session only (endedAt is null). Used for live flight path on the map. */
+export function getActiveSession(sessions: Session[]): Session | undefined {
+  return pickLatestSession(sessions.filter((session) => !session.endedAt));
+}
+
+/** Latest session for telemetry display — active, or most recent ended if none active. */
+export function getCurrentSession(sessions: Session[]): Session | undefined {
+  const active = getActiveSession(sessions);
+  if (active) return active;
+  return pickLatestSession(sessions);
 }
 
 export function getLatestPosition(positions: Position[]): Position | undefined {
@@ -34,12 +43,27 @@ export function mergeDroneUpdate(prev: Drone[], incoming: Drone): Drone[] {
   }
 
   const existing = prev[index];
-  const incomingSession = getCurrentSession(incoming.sessions);
+  const incomingSession = getActiveSession(incoming.sessions);
   const newPosition = incomingSession
     ? getLatestPosition(incomingSession.positions)
     : undefined;
   if (!incomingSession || !newPosition) {
-    return prev;
+    const stillActive = existing.sessions.some((session) => !session.endedAt);
+    if (!stillActive) return prev;
+
+    const sessions = existing.sessions.map((session) =>
+      session.endedAt ? session : { ...session, endedAt: new Date().toISOString() },
+    );
+    const next = [...prev];
+    next[index] = {
+      ...existing,
+      name: incoming.name,
+      serial: incoming.serial,
+      model: incoming.model ?? existing.model,
+      alertStatus: incoming.alertStatus ?? existing.alertStatus,
+      sessions,
+    };
+    return next;
   }
 
   const existingLatest = getDroneLatestPosition(existing);
@@ -54,7 +78,11 @@ export function mergeDroneUpdate(prev: Drone[], incoming: Drone): Drone[] {
   let sessions: Session[];
 
   if (sessionIndex === -1) {
-    sessions = [...existing.sessions, incomingSession];
+    const endedAt = new Date().toISOString();
+    const closedSessions = existing.sessions.map((session) =>
+      !session.endedAt ? { ...session, endedAt } : session,
+    );
+    sessions = [...closedSessions, incomingSession];
   } else {
     const session = existing.sessions[sessionIndex];
     if (session.positions.some((position) => position.id === newPosition.id)) {

@@ -14,7 +14,7 @@ import {
   applyUserZoneFeatureProps,
   type UserZoneResult,
 } from '../../utils/user-zones';
-import { getCurrentSession, getDroneLatestPosition, isDroneRegistered } from '../../utils/drone';
+import { getActiveSession, getDroneLatestPosition, isDroneRegistered } from '../../utils/drone';
 import type { Drone } from '../../utils/types';
 import type { FlightRestrictionZoneResult } from './types';
 
@@ -182,7 +182,7 @@ export function buildDronePathCoordinates(
     return null;
   }
 
-  const session = getCurrentSession(drone.sessions);
+  const session = getActiveSession(drone.sessions);
   const positions = session?.positions ?? [];
   if (positions.length === 0) return null;
 

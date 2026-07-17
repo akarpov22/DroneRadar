@@ -40,7 +40,7 @@ export const DroneNotificationProvider: React.FC<{ children: React.ReactNode }> 
   const { t } = useTranslation();
   const toast = useToast({ position: 'bottom', duration: 6000, isClosable: true });
   const wsClient = useContext(SubscriptionClientContext);
-  const { canManageDrones } = useDroneSelection();
+  const { canManageDrones, isAdmin } = useDroneSelection();
   const [notifications, setNotifications] = useState<DroneNotification[]>([]);
   const [alertStatusByDroneId, setAlertStatusByDroneId] = useState<Record<string, AlertStatus>>({});
   const seenIdsRef = useRef<Set<string>>(new Set());
@@ -80,6 +80,8 @@ export const DroneNotificationProvider: React.FC<{ children: React.ReactNode }> 
 
       setNotifications((prev) => [notification, ...prev].slice(0, MAX_NOTIFICATIONS));
 
+      if (isAdmin) return;
+
       const toastId = notification.id;
       if (toast.isActive(toastId)) return;
 
@@ -100,7 +102,7 @@ export const DroneNotificationProvider: React.FC<{ children: React.ReactNode }> 
 
       activeToastIdsRef.current.push(toastId);
     },
-    [t, toast],
+    [isAdmin, t, toast],
   );
 
   const pushNotificationRef = useRef(pushNotification);

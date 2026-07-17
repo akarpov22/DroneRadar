@@ -26,6 +26,7 @@ type DroneSelectionContextProps = {
   setShowOnlyMine: Dispatch<SetStateAction<boolean>>;
   myDroneIds: ReadonlySet<string>;
   canManageDrones: boolean;
+  isAdmin: boolean;
 };
 
 const DroneSelectionContext = createContext<DroneSelectionContextProps | null>(null);
@@ -36,6 +37,7 @@ export const DroneSelectionProvider: React.FC<{ children: React.ReactNode }> = (
 
   const { data: meData } = useQuery(ME);
   const role = meData?.me?.role;
+  const isAdmin = role === 'ADMIN';
   const canManageDrones = role === 'ADMIN' || role === 'PILOT';
 
   const { data: myDronesData } = useQuery<{ myDrones: Drone[] }>(MY_DRONES, {
@@ -63,6 +65,7 @@ export const DroneSelectionProvider: React.FC<{ children: React.ReactNode }> = (
         setShowOnlyMine,
         myDroneIds,
         canManageDrones,
+        isAdmin,
       }}
     >
       {children}

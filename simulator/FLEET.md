@@ -1,10 +1,8 @@
-# Fleet simulator — 5 дронов (минимум)
+# Fleet simulator — 4 дрона (SE-SIM-002 отключён)
 
-| Serial | Route | Що перевіряє |
-|--------|-------|---------------|
-| **SE-SIM-001** | 0 | **USER_ZONE_ENTER / USER_ZONE_EXIT** — круг 400 м, центр `59.435536, 17.648498` |
-| **SE-SIM-002** | 1 | **ZONE_APPROACH** + **ZONE_ENTER** — Bromma CTR |
-| **SE-SIM-003** | 2 | **DRONE_PROXIMITY** + **COLLISION_ALTITUDE** — парний, 90 м |
-| **SE-SIM-004** | 3 | **DRONE_PROXIMITY** + **COLLISION_ALTITUDE** — парний, 115 m  |
-| **SE-SIM-005** | 4 |  Stockholm (фон) |
-
+| Serial | Route | Поведение |
+|--------|-------|-----------|
+| **SE-SIM-001** | 0 | Малый круг (~70 м) вокруг `59.435536, 17.648498` |
+| **SE-SIM-003** | 1 | **DRONE_PROXIMITY** + **COLLISION_ALTITUDE** — шаттл 100 м, цикл **15 с**, высота 90 м |
+| **SE-SIM-004** | 2 | Пара к 003 — фаза 7.5 с, высота 115 м; расходятся (green) → пересекаются → назад |
+| **SE-SIM-005** | 3 | **ZONE_ENTER** (BROMMA CTR): диагональ через SW-угол `17.74667, 59.24944` — 10 с снаружи → 5 с внутри |

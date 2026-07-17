@@ -40,6 +40,7 @@ const { getPosition: getRoutePosition } = buildRouteNavigator(
   selectedRoute.waypoints,
   targetSpeedKmh,
   speedMultiplier,
+  { cycleDurationMs: selectedRoute.cycleDurationMs },
 );
 
 const telemetryTopic = `droneradar/telemetry/${serial}`;

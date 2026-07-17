@@ -2,7 +2,7 @@ import 'dotenv/config';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { ROUTES, printFleetCatalog, FLEET_SIZE } from './routes.js';
+import { FLEET_PLAN, ROUTES, printFleetCatalog, FLEET_SIZE, getFleetEntry } from './routes.js';
 import { buildDroneSerial } from './serials.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -17,16 +17,16 @@ if (!Number.isInteger(count) || count < 1) {
 const children = [];
 const usedSerials = new Set();
 
-function spawnDrone(index) {
-  const serial = buildDroneSerial(index, regionCode);
+function spawnDrone(fleetSlot) {
+  const entry = getFleetEntry(fleetSlot);
+  const serial = buildDroneSerial(entry.serialIndex, regionCode);
   if (usedSerials.has(serial)) {
     throw new Error(`Duplicate drone serial in fleet: ${serial}`);
   }
   usedSerials.add(serial);
 
-  const routeIndex = index % ROUTES.length;
-  const route = ROUTES[routeIndex];
-  const routePhaseMs = route.fleetPhaseMs ?? index * 90_000;
+  const route = ROUTES[entry.routeIndex];
+  const routePhaseMs = route.fleetPhaseMs ?? 0;
 
   const { DRONE_SERIAL: _ignoredSerial, ...baseEnv } = process.env;
 
@@ -34,8 +34,8 @@ function spawnDrone(index) {
     env: {
       ...baseEnv,
       DRONE_SERIAL: serial,
-      FLEET_INSTANCE_INDEX: String(index),
-      ROUTE_INDEX: String(routeIndex),
+      FLEET_INSTANCE_INDEX: String(entry.serialIndex),
+      ROUTE_INDEX: String(entry.routeIndex),
       ROUTE_PHASE_MS: String(routePhaseMs),
       REGION_CODE: regionCode,
     },
@@ -51,12 +51,13 @@ function spawnDrone(index) {
 
   children.push(child);
   const typeTag = route.demoKind ? `[${route.demoKind}] ` : route.zoneType ? `[${route.zoneType}] ` : '';
-  console.log(`[fleet] Started ${serial} → route #${routeIndex} ${typeTag}(${route.name}), phase=${routePhaseMs}ms`);
+  console.log(`[fleet] Started ${serial} → route #${entry.routeIndex} ${typeTag}(${route.name}), phase=${routePhaseMs}ms`);
 }
 
 printFleetCatalog(regionCode);
 
-for (let i = 0; i < count; i += 1) {
+const spawnCount = Math.min(count, FLEET_PLAN.length);
+for (let i = 0; i < spawnCount; i += 1) {
   spawnDrone(i);
 }
 

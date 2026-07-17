@@ -1,60 +1,55 @@
 import { buildDroneSerial } from './serials.js';
-import { NOTIFICATION_DEMO_ROUTES } from './notification-routes.js';
-import { ZONE_CROSSING_ROUTES } from './zone-routes.js';
+import { NOTIFICATION_DEMO_ROUTES, RED_ZONE_DEMO_ROUTE } from './notification-routes.js';
 
 /** @typedef {import('./notification-routes.js').DemoRoute} DemoRoute */
 
-/** One background Stockholm patrol route. */
-export const STOCKHOLM_PATROL_ROUTES = [
-  {
-    id: ZONE_CROSSING_ROUTES[0].id,
-    name: `Stockholm patrol — ${ZONE_CROSSING_ROUTES[0].name}`,
-    demoKind: 'STOCKHOLM_PATROL',
-    zoneType: ZONE_CROSSING_ROUTES[0].zoneType,
-    zoneLabel: ZONE_CROSSING_ROUTES[0].zoneLabel,
-    waypoints: ZONE_CROSSING_ROUTES[0].waypoints,
-  },
+/**
+ * Fleet plan: serial indices skip SE-SIM-002.
+ * routeIndex maps into ROUTES below.
+ */
+export const FLEET_PLAN = [
+  { serialIndex: 0, routeIndex: 0 }, // SE-SIM-001 — circle
+  { serialIndex: 2, routeIndex: 1 }, // SE-SIM-003 — pair low
+  { serialIndex: 3, routeIndex: 2 }, // SE-SIM-004 — pair high
+  { serialIndex: 4, routeIndex: 3 }, // SE-SIM-005 — red zone pulse
 ];
 
-export const DEMO_ROUTE_COUNT = NOTIFICATION_DEMO_ROUTES.length;
-export const FLEET_SIZE = DEMO_ROUTE_COUNT + STOCKHOLM_PATROL_ROUTES.length;
+/** 3 demo + 1 red-zone pulse = 4 routes / 4 drones. */
+export const ROUTES = [...NOTIFICATION_DEMO_ROUTES, RED_ZONE_DEMO_ROUTE];
 
-/** 4 demo + 1 Stockholm = 5 drones. */
-export const ROUTES = [...NOTIFICATION_DEMO_ROUTES, ...STOCKHOLM_PATROL_ROUTES];
+export const DEMO_ROUTE_COUNT = NOTIFICATION_DEMO_ROUTES.length;
+export const FLEET_SIZE = FLEET_PLAN.length;
 
 /** @type {Array<{ index: number, serial: string, routeIndex: number, routeId: string, routeName: string, tests: string, register: boolean }>} */
-export const FLEET_CATALOG = ROUTES.map((route, routeIndex) => {
+export const FLEET_CATALOG = FLEET_PLAN.map((entry) => {
+  const route = ROUTES[entry.routeIndex];
   const testsByKind = {
-    USER_ZONE_ENTER_EXIT:
-      'USER_ZONE_ENTER / USER_ZONE_EXIT — круг 400 м вокруг 59.435536, 17.648498',
-    ZONE_APPROACH_AND_ENTER:
-      'ZONE_APPROACH + ZONE_ENTER — Bromma CTR (сначала ≤100 м, затем вход)',
+    USER_ZONE_CIRCLE:
+      'Малый круг (~70 м) вокруг 59.435536, 17.648498',
     PAIR_PROXIMITY_COLLISION:
-      'DRONE_PROXIMITY + COLLISION_ALTITUDE — парный дрон (смещение по фазе, не наслоение)',
-    STOCKHOLM_PATROL: 'Патруль Stockholm (фон, без демо-уведомлений)',
+      'DRONE_PROXIMITY + COLLISION_ALTITUDE — цикл 15 с (расходятся → пересекаются → назад)',
+    RED_ZONE_PULSE:
+      'ZONE_ENTER — вне BROMMA CTR → каждые 10 с вход, 5 с внутри, выход на старт',
   };
 
-  const isDemo = route.demoKind !== 'STOCKHOLM_PATROL';
-
   return {
-    index: routeIndex,
-    serial: buildDroneSerial(routeIndex),
-    routeIndex,
+    index: entry.serialIndex,
+    serial: buildDroneSerial(entry.serialIndex),
+    routeIndex: entry.routeIndex,
     routeId: route.id,
     routeName: route.name,
     tests: testsByKind[route.demoKind] ?? route.name,
-    register: isDemo,
+    register: true,
   };
 });
 
 export function printFleetCatalog(regionCode = 'SE') {
-  console.log(`[fleet] ${FLEET_SIZE} drones (${DEMO_ROUTE_COUNT} demo + ${STOCKHOLM_PATROL_ROUTES.length} Stockholm)`);
-  console.log('[fleet] Register SE-SIM-001 … SE-SIM-004 in UI for notifications:');
+  console.log(`[fleet] ${FLEET_SIZE} drones (SE-SIM-002 disabled)`);
+  console.log('[fleet] Active serials:');
   for (const entry of FLEET_CATALOG) {
     const serial = buildDroneSerial(entry.index, regionCode);
     console.log(`  ${serial}  route #${entry.routeIndex}  —  ${entry.tests}`);
   }
-  console.log('[fleet] User zone for SE-SIM-001: circle 400 m at 59.435536, 17.648498');
 }
 
 export function hashString(value) {
@@ -74,9 +69,21 @@ export function resolveRouteIndex(serial, explicitIndex) {
     }
     return parsed % ROUTES.length;
   }
+
+  const match = /^[A-Z]{2}-SIM-(\d+)$/i.exec(serial ?? '');
+  if (match) {
+    const serialIndex = Number(match[1]) - 1;
+    const planned = FLEET_PLAN.find((entry) => entry.serialIndex === serialIndex);
+    if (planned) return planned.routeIndex;
+  }
+
   return hashString(serial) % ROUTES.length;
 }
 
 export function getRouteByIndex(index) {
   return ROUTES[index % ROUTES.length];
+}
+
+export function getFleetEntry(fleetSlot) {
+  return FLEET_PLAN[fleetSlot % FLEET_PLAN.length];
 }

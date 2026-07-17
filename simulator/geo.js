@@ -35,26 +35,60 @@ export function lerp(from, to, progress) {
   return from + (to - from) * progress;
 }
 
-export function buildRouteNavigator(route, targetSpeedKmh, speedMultiplier) {
+/**
+ * @param {Array<{ latitude: number, longitude: number, altitude: number, holdMs?: number, legMs?: number }>} route
+ * @param {number} targetSpeedKmh
+ * @param {number} speedMultiplier
+ * @param {{ cycleDurationMs?: number }} [options]
+ */
+export function buildRouteNavigator(route, targetSpeedKmh, speedMultiplier, options = {}) {
   const targetSpeedMetersPerSecond = targetSpeedKmh / 3.6;
+  const cycleDurationMs = options.cycleDurationMs;
 
+  /** @type {Array<{ kind: 'hold' | 'move', from: object, to: object, durationMs: number, heading: number }>} */
   const segments = [];
+
   for (let index = 0; index < route.length; index += 1) {
     const from = route[index];
     const to = route[(index + 1) % route.length];
-    const distance = distanceMeters(from, to);
-    if (distance <= 0) continue;
+    const heading = bearingDegrees(from, to);
 
-    segments.push({
-      from,
-      to,
-      durationMs: distance / targetSpeedMetersPerSecond * 1000,
-    });
+    const holdMs = Number(from.holdMs ?? 0);
+    if (holdMs > 0) {
+      segments.push({ kind: 'hold', from, to: from, durationMs: holdMs, heading });
+    }
+
+    const distance = distanceMeters(from, to);
+    if (distance <= 0 && from.legMs == null) continue;
+
+    const legMs = from.legMs != null
+      ? Number(from.legMs)
+      : distance / targetSpeedMetersPerSecond * 1000;
+
+    if (legMs > 0) {
+      segments.push({ kind: 'move', from, to, durationMs: legMs, heading });
+    }
+  }
+
+  if (cycleDurationMs != null && cycleDurationMs > 0 && segments.length > 0) {
+    const holdTotal = segments
+      .filter((s) => s.kind === 'hold')
+      .reduce((sum, s) => sum + s.durationMs, 0);
+    const moveSegments = segments.filter((s) => s.kind === 'move');
+    const moveBudget = Math.max(0, cycleDurationMs - holdTotal);
+    const moveTotal = moveSegments.reduce((sum, s) => sum + s.durationMs, 0);
+
+    if (moveSegments.length > 0 && moveTotal > 0 && moveBudget > 0) {
+      const scale = moveBudget / moveTotal;
+      for (const segment of moveSegments) {
+        segment.durationMs *= scale;
+      }
+    }
   }
 
   const routeDurationMs = segments.reduce((sum, segment) => sum + segment.durationMs, 0);
 
-  function buildPosition(from, to, progress, elapsedMs) {
+  function buildPosition(from, to, progress, elapsedMs, heading) {
     const speedKmh = targetSpeedKmh * speedMultiplier;
     const liveWave = Math.sin(elapsedMs / 4500);
 
@@ -63,7 +97,7 @@ export function buildRouteNavigator(route, targetSpeedKmh, speedMultiplier) {
       longitude: lerp(from.longitude, to.longitude, progress),
       altitude: lerp(from.altitude, to.altitude, progress) + liveWave * 1.5,
       speed: speedKmh + Math.sin(elapsedMs / 3000) * 0.7,
-      heading: bearingDegrees(from, to),
+      heading,
     };
   }
 
@@ -88,12 +122,32 @@ export function buildRouteNavigator(route, targetSpeedKmh, speedMultiplier) {
         continue;
       }
 
+      if (segment.kind === 'hold') {
+        const liveWave = Math.sin(elapsedMs / 4500);
+        return {
+          latitude: segment.from.latitude,
+          longitude: segment.from.longitude,
+          altitude: segment.from.altitude + liveWave * 1.5,
+          speed: Math.max(0.5, targetSpeedKmh * speedMultiplier * 0.15),
+          heading: segment.heading,
+        };
+      }
+
       const progress = segment.durationMs > 0 ? timeOnRouteMs / segment.durationMs : 0;
-      return buildPosition(segment.from, segment.to, progress, elapsedMs);
+      return buildPosition(segment.from, segment.to, progress, elapsedMs, segment.heading);
     }
 
     const last = segments[segments.length - 1];
-    return buildPosition(last.from, last.to, 1, elapsedMs);
+    if (last.kind === 'hold') {
+      return {
+        latitude: last.from.latitude,
+        longitude: last.from.longitude,
+        altitude: last.from.altitude,
+        speed: targetSpeedKmh * speedMultiplier * 0.15,
+        heading: last.heading,
+      };
+    }
+    return buildPosition(last.from, last.to, 1, elapsedMs, last.heading);
   }
 
   return { getPosition, routeDurationMs };
